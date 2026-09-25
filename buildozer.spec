@@ -27,7 +27,10 @@ android.enable_androidx = True
 
 android.add_compile_options = sourceCompatibility = JavaVersion.VERSION_1_8, targetCompatibility = JavaVersion.VERSION_1_8
 android.manifest.application_arguments = android:usesCleartextTraffic="true"
-android.gradle_dependencies = androidx.media3:media3-exoplayer:1.1.0, androidx.media3:media3-ui:1.1.0
+
+# ⚡ OPTİMİZASYON: Boş bırakılarak derleme süresi kısaltıldı (Media3 kütüphaneleri kaldırıldı)
+android.gradle_dependencies =
+
 android.manifest.intent_filters = [ {"action": "android.intent.action.MAIN", "category": ["android.intent.category.LEANBACK_LAUNCHER", "android.intent.category.LAUNCHER"]} ]
 android.archs = armeabi-v7a, arm64-v8a
 
