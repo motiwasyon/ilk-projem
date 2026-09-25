@@ -8,14 +8,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 90  # ⏳ Derlemenin yarıda kesilmesini önlemek için maksimum süre 90 dakikaya çıkarıldı.
+    timeout-minutes: 90
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v5 # 🛠️ Node 24 uyumluluğu için v5'e yükseltildi.
+      uses: actions/checkout@v4
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v4 # 🛠️ En kararlı ve güncel sürüme çekildi.
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
@@ -26,7 +26,7 @@ jobs:
         python-version: '3.11'
 
     - name: Cache Android SDK and Buildozer
-      uses: actions/cache@v4 # Bu eylem projeniz için mevcut en güncel sürümde kalmıştır.
+      uses: actions/cache@v4
       with:
         path: |
           ~/.buildozer
@@ -71,9 +71,11 @@ jobs:
       env:
         BUILDOZER_ALLOW_KIVY_NEW_DESIGN: 1
         TERM: xterm
+        ANDROID_VERSION: "33"
+        ANDROID_BUILD_TOOLS_VERSION: "33.0.2"
 
     - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4 # 📥 Derleme bittiğinde APK dosyasını "Artifacts" kısmına otomatik yükler.
+      uses: actions/upload-artifact@v4
       with:
         name: SelgeTV-Debug-APK
         path: bin/*.apk
