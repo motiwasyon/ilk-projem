@@ -19,6 +19,10 @@ android.accept_sdk_license = True
 android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
 android.api = 33
 android.minapi = 26
+
+# 🛠️ KESİN ÇÖZÜM: Kararsız Build-Tools 37 yerine Android 13 (API 33) ile tam uyumlu resmi sürüm kilitlendi
+android.build_tools_version = 33.0.2
+
 android.enable_androidx = True
 
 android.add_compile_options = sourceCompatibility = JavaVersion.VERSION_1_8, targetCompatibility = JavaVersion.VERSION_1_8
