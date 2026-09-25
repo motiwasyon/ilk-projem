@@ -67,12 +67,15 @@ jobs:
 
     - name: Build APK with Buildozer
       run: |
-        yes | buildozer android debug
+        buildozer android debug
       env:
         BUILDOZER_ALLOW_KIVY_NEW_DESIGN: 1
         TERM: xterm
         ANDROID_VERSION: "33"
         ANDROID_BUILD_TOOLS_VERSION: "33.0.2"
+        # ⚡ KİLİTLENME KARŞITI ÖZEL AYARLAR: Terminalin "Inappropriate ioctl" hatası vermesini ve askıda kalmasını önler!
+        NONINTERACTIVE: 1
+        DEBIAN_FRONTEND: noninteractive
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
