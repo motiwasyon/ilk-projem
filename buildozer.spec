@@ -8,7 +8,7 @@ source.include_exts = py,png,jpg,kv,atlas,json
 version = 1.7
 
 # 🚀 GEREKSİNİMLER
-requirements = python3, kivy==2.3.0, pyjnius, requests, certifi, urllib3, idna, charset-normalizer
+requirements = python3, kivy==2.3.0, pyjnius, requests, certifi, urllib3, idna, charset-normalizer, openssl
 
 orientation = all
 fullscreen = 1
@@ -33,7 +33,7 @@ android.archs = armeabi-v7a, arm64-v8a
 # ⚡ NİHAİ ÇÖZÜM: Gereksiz kütüphaneler hariç tutuldu
 android.p4a_extra_args = --exclude-libs=libestdc++,test,unittest,tkinter,pydoc,distutils,libjxl,brotli,highway,libavif,lcms,lodepng,sjpeg,skcms,googletest --no-deps
 
-p4a.branch = release-2024.01.21
+p4a.branch = master
 android.ndk = 25b
 android.allow_backup = True
 
