@@ -35,7 +35,7 @@ android.archs = armeabi-v7a, arm64-v8a
 android.p4a_extra_args = --exclude-libs=libestdc++,test,unittest,tkinter,pydoc,distutils --no-deps
 
 
-p4a.branch = release-2023.06.09
+p4a.branch = v2023.06.09
 android.ndk = 25b
 android.allow_backup = True
 
