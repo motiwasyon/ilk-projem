@@ -8,7 +8,7 @@ source.include_exts = py,png,jpg,kv,atlas,json
 version = 1.7
 
 # 🚀 GEREKSİNİMLER
-requirements = python3, kivy==2.3.0, pyjnius, requests, certifi, urllib3, idna, charset-normalizer, openssl
+requirements = python3==3.11.10, kivy==2.3.0, pyjnius, requests, certifi, urllib3, idna, charset-normalizer, openssl
 
 
 orientation = all
@@ -32,10 +32,10 @@ android.manifest.intent_filters = [ {"action": "android.intent.action.MAIN", "ca
 android.archs = armeabi-v7a, arm64-v8a
 
 # ⚡ NİHAİ ÇÖZÜM: Gereksiz kütüphaneler hariç tutuldu
-android.p4a_extra_args = --exclude-libs=libestdc++,test,unittest,tkinter,pydoc,distutils,libjxl,brotli,highway,libavif,lcms,lodepng,sjpeg,skcms,googletest,libwebp,libtiff,dav1d,jpeg,png,webp,tiff,brotli --no-deps
+android.p4a_extra_args = --exclude-libs=libestdc++,test,unittest,tkinter,pydoc,distutils,libjxl,brotli,highway,libavif,lcms,lodepng,sjpeg,skcms,googletest --no-deps
 
 
-p4a.branch = master
+p4a.branch = release-2024.01.21
 android.ndk = 25b
 android.allow_backup = True
 
