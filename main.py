@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import os
 import requests
@@ -34,7 +35,7 @@ class TVBoxButton(Button):
 
 class SelgeTVPremiumApp(App):
     def build(self):
-        self.title = "Selge TV Premium v1.6"
+        self.title = "Selge TV Premium v1.7"
         
         self.store = JsonStore('selgetv_settings.json')
         saved_ip = "192.168.1.208"
