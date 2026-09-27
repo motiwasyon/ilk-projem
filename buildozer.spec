@@ -32,7 +32,7 @@ android.manifest.intent_filters = [ {"action": "android.intent.action.MAIN", "ca
 android.archs = armeabi-v7a, arm64-v8a
 
 # ⚡ NİHAİ ÇÖZÜM: Gereksiz kütüphaneler hariç tutuldu
-android.p4a_extra_args = --exclude-libs=libestdc++,test,unittest,tkinter,pydoc,distutils,libjxl,brotli,highway,libavif,lcms,lodepng,sjpeg,skcms,googletest,libwebp,libtiff,dav1d --no-deps
+android.p4a_extra_args = --exclude-libs=libestdc++,test,unittest,tkinter,pydoc,distutils,libjxl,brotli,highway,libavif,lcms,lodepng,sjpeg,skcms,googletest,libwebp,libtiff,dav1d,jpeg,png,webp,tiff,brotli --no-deps
 
 
 p4a.branch = master
