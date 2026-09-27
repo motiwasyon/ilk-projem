@@ -6,6 +6,7 @@ package.domain = org.selgeproje
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,json
 version = 1.7
+source.exclude_dirs = tests, test, bst, bin, venv, env
 
 # 🚀 GEREKSİNİMLER
 requirements = python3==3.11.10, kivy==2.3.0, pyjnius, requests, certifi, urllib3, idna, charset-normalizer, openssl
