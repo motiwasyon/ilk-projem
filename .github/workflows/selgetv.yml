@@ -46,8 +46,7 @@ jobs:
     # 🚀 PARÇA 1: Sadece bağımlılıkları indir ve havuzu hazırla (15 dakikayı aşmamak için ön hazırlık)
     - name: Pre-build Android SDK/NDK
       run: |
-        buildozer android p4a -- get-packages || true
-        buildozer android p4a -- clean || true
+        buildozer android p4a -- dists
 
     # 🚀 PARÇA 2: Hazır olan altyapı üzerinden APK'yı paketle
     - name: Build Final APK
