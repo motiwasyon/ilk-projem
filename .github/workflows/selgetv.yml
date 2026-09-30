@@ -23,7 +23,6 @@ jobs:
       with:
         python-version: '3.11'
 
-    # 🔑 SANAL TERMİNAL VE EKRAN MOTORUNU SUNUCUYA KURUYORUZ
     - name: Install System Dependencies
       run: |
         sudo apt-get update
@@ -60,7 +59,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 SANAL EKRAN SARMALAYICISI (XVFB-RUN) İLE GÜVENLİ DERLEME
+    # 🚀 CYTHON KATILIKLARINI VE EKRAN HATALARINI GEÇEN NİHAİ TETİKLEYİCİ
     - name: Build Final APK
       run: |
         xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" buildozer -v android debug
@@ -69,10 +68,12 @@ jobs:
         TERM: xterm
         NONINTERACTIVE: 1
         DEBIAN_FRONTEND: noninteractive
+        APP_CYTHON_COMPILE_OPTIONS: "-X legacy_implicit_noexcept=True"
+        CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration"
+        CXXFLAGS: "-Wno-error=incompatible-pointer-types"
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: SelgeTV-Android-APK
         path: bin/*.apk
-
