@@ -10,7 +10,6 @@ jobs:
 
     steps:
     - name: Checkout Code
-# Detaylı repo kontrol adımı tetiklenir
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
