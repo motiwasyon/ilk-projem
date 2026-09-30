@@ -43,7 +43,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🚀 TAKILMAYI ÖNLEYEN KESİNTİSİZ TEK PARÇA CANLI PAKETLEME
+    # 🚀 ANDROID LİSANSLARINI OTOMATİK ONAYLAMA KİLİDİ
+    - name: Accept Android Licenses
+      run: |
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        yes | buildozer android debug --only-compile-deps || true
+
     - name: Build Final APK
       run: |
         buildozer -v android debug
@@ -53,12 +59,9 @@ jobs:
         NONINTERACTIVE: 1
         DEBIAN_FRONTEND: noninteractive
 
-    # 📥 BAŞARIYLA TAMAMLANAN UYGULAMAYI ÇIKARMA
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: SelgeTV-Android-APK
         path: bin/*.apk
-
-    
 
