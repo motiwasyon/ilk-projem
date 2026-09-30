@@ -33,7 +33,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🛠️ AYAR DOSYASINI BURADA SUNUCU İÇİNDE SIFIRDAN VE KESİN OLARAK OLUŞTURUYORUZ
+    # 🛠️ GEREKSİZ VİDEO PAKETLERİNİN İNDİRİLMESİNİ ENGELEYEN SAF ÖZELLİKLİ ENJEKSİYON
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -61,6 +61,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
+    # 🚀 AĞ DONMALARINI ENGELLEYEN HIZLI PAKETLEME MOTORU
     - name: Build Final APK
       run: |
         buildozer -v android debug
@@ -69,10 +70,12 @@ jobs:
         TERM: xterm
         NONINTERACTIVE: 1
         DEBIAN_FRONTEND: noninteractive
+        P4A_EXTRA_ARGS: "--gstreamer=bootstrap"
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: SelgeTV-Android-APK
         path: bin/*.apk
+
 
