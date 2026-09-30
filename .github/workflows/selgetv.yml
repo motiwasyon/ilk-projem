@@ -18,10 +18,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up Python 3.11
+    # 🔑 EN KRİTİK YER: Sunucuyu tamamen Android uyumlu Python 3.10 sürümüne sabitliyoruz
+    - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.10'
 
     - name: Install System Dependencies
       run: |
@@ -33,7 +34,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🛠️ GEREKSİZ VİDEO PAKETLERİNİN İNDİRİLMESİNİ ENGELEYEN SAF ÖZELLİKLİ ENJEKSİYON
+    # 🛠️ AYAR DOSYASINI BURADA PYTHON 3.10'A TAM UYUMLU OLARAK ENJEKTE EDİYORUZ
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -44,7 +45,7 @@ jobs:
         echo "source.include_exts = py,png,jpg,kv,atlas,m3u" >> buildozer.spec
         echo "version = 1.0" >> buildozer.spec
         echo "orientation = landscape" >> buildozer.spec
-        echo "requirements = python3,kivy==2.3.0" >> buildozer.spec
+        echo "requirements = python3==3.10.11,kivy==2.3.0" >> buildozer.spec
         echo "fullscreen = 1" >> buildozer.spec
         echo "android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE" >> buildozer.spec
         echo "android.api = 33" >> buildozer.spec
@@ -61,7 +62,6 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 AĞ DONMALARINI ENGELLEYEN HIZLI PAKETLEME MOTORU
     - name: Build Final APK
       run: |
         buildozer -v android debug
@@ -70,12 +70,12 @@ jobs:
         TERM: xterm
         NONINTERACTIVE: 1
         DEBIAN_FRONTEND: noninteractive
-        P4A_EXTRA_ARGS: "--gstreamer=bootstrap"
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: SelgeTV-Android-APK
         path: bin/*.apk
+
 
 
