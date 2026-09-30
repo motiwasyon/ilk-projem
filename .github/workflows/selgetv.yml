@@ -59,7 +59,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 TAKILMALARI VE ZAMAN AŞIMLARINI KALICI OLARAK BYPASS EDEN HIZLI MOTOR
+    # 🚀 TÜM DERLEYİCİ KATILIKLARINI VE TERMİNAL KİLİTLERİNİ ESNETEN NİHAİ ADIM
     - name: Build Final APK
       run: |
         export TERM=xterm
@@ -69,5 +69,4 @@ jobs:
       env:
         BUILDOZER_ALLOW_KIVY_NEW_DESIGN: 1
         APP_CYTHON_COMPILE_OPTIONS: "-X legacy_implicit_noexcept=True"
-        CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration"
-        P4A_EXTRA_ARGS: "--gstreamer=bootstrap"
+        CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion"
