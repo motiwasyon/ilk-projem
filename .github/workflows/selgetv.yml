@@ -43,12 +43,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🚀 PARÇA 1: Sadece bağımlılıkları indir ve havuzu hazırla (Ön Hazırlık)
-    - name: Pre-build Android SDK/NDK
-      run: |
-        buildozer android p4a -- dists
-
-    # 🚀 PARÇA 2: Hazır olan altyapı üzerinden APK'yı paketle
+    # 🚀 TAKILMAYI ÖNLEYEN KESİNTİSİZ TEK PARÇA CANLI PAKETLEME
     - name: Build Final APK
       run: |
         buildozer -v android debug
@@ -58,7 +53,7 @@ jobs:
         NONINTERACTIVE: 1
         DEBIAN_FRONTEND: noninteractive
 
-    # 📥 İNDİRME LİNKİ OLUŞTURUCU (Yol ve İsim Parametreleri Eklendi)
+    # 📥 BAŞARIYLA TAMAMLANAN UYGULAMAYI ÇIKARMA
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
