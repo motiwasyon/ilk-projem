@@ -10,6 +10,7 @@ jobs:
 
     steps:
     - name: Checkout Code
+# Detaylı repo kontrol adımı tetiklenir
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
@@ -33,6 +34,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
+    # 🛠️ AYAR DOSYASINI BURADA PYTHON 3.11'E TAM UYUMLU OLARAK ENJEKTE EDİYORUZ
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -59,18 +61,15 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 CYTHON KATILIKLARINI VE EKRAN HATALARINI GEÇEN NİHAİ TETİKLEYİCİ
+    # 🚀 TERMINAL SORGULARINI TAMAMEN DEVRE DIŞI BIRAKAN SESSİZ KİLİTSİZ DERLEME MOTORU
     - name: Build Final APK
       run: |
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" buildozer -v android debug
+        export TERM=xterm
+        export NONINTERACTIVE=1
+        export DEBIAN_FRONTEND=noninteractive
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" buildozer -q android debug
       env:
         BUILDOZER_ALLOW_KIVY_NEW_DESIGN: 1
-        TERM: xterm
-        NONINTERACTIVE: 1
-        DEBIAN_FRONTEND: noninteractive
-        APP_CYTHON_COMPILE_OPTIONS: "-X legacy_implicit_noexcept=True"
-        CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration"
-        CXXFLAGS: "-Wno-error=incompatible-pointer-types"
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
