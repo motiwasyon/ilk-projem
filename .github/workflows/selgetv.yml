@@ -59,7 +59,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 TÜM DERLEYİCİ KATILIKLARINI VE TERMİNAL KİLİTLERİNİ ESNETEN NİHAİ ADIM
+    # 🚀 TÜM DERLEYİCİ KATILIKLARINI VE SÜRÜM ENGELLERİNİ ESNETEN NİHAİ ADIM
     - name: Build Final APK
       run: |
         export TERM=xterm
