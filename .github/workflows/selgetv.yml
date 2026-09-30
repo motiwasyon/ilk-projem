@@ -36,14 +36,14 @@ jobs:
     - name: Install System Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential git ffmpeg libffi-dev libssl-dev autoconf automake libtool pkg-config zlib1g-dev libsqlite3-dev libgmp-dev libmpc-dev libmpfr-dev libasound2-dev libgl1-mesa-dev libgl1-mesa-glx unzip zip
+        sudo apt-get install -y build-essential git ffmpeg libffi-dev libssl-dev autoconf automake libtool pkg-config zlib1g-dev libsqlite3-dev libgmp-dev libmpc-dev libmpfr-dev libasound2-dev libgl1-mesa-dev unzip zip
 
     - name: Install Buildozer and Cython
       run: |
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🚀 PARÇA 1: Sadece bağımlılıkları indir ve havuzu hazırla (15 dakikayı aşmamak için ön hazırlık)
+    # 🚀 PARÇA 1: Sadece bağımlılıkları indir ve havuzu hazırla (Ön Hazırlık)
     - name: Pre-build Android SDK/NDK
       run: |
         buildozer android p4a -- dists
@@ -58,10 +58,12 @@ jobs:
         NONINTERACTIVE: 1
         DEBIAN_FRONTEND: noninteractive
 
+    # 📥 İNDİRME LİNKİ OLUŞTURUCU (Yol ve İsim Parametreleri Eklendi)
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: SelgeTV-Debug-APK
+        name: SelgeTV-Android-APK
         path: bin/*.apk
 
+    
 
