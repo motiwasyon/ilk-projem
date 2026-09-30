@@ -18,11 +18,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    # 🔑 SÜRÜM ÇAKIŞMASINI ENGELLEYEN DEĞİŞKENSİZ ANA MOTOR TANIMI
-    - name: Set up System Python
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x'
+        python-version: '3.11'
 
     - name: Install System Dependencies
       run: |
@@ -34,7 +33,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🛠️ AYAR DOSYASINI SUNUCU SÜRÜMÜNE GÖRE TAM UYUMLU OLARAK ENJEKTE EDİYORUZ
+    # 🛠️ GRAFİK KİLİTLENMELERİNİ ENGELLEYEN SABİT AYAR ENJEKSİYONU
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -62,6 +61,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
+    # 🚀 TERMINAL SORGULARINI (STTY) BYPASS EDEN GÜVENLİ DERLEME
     - name: Build Final APK
       run: |
         buildozer -v android debug
@@ -70,7 +70,12 @@ jobs:
         TERM: xterm
         NONINTERACTIVE: 1
         DEBIAN_FRONTEND: noninteractive
+        GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
-
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SelgeTV-Android-APK
+        path: bin/*.apk
 
 
