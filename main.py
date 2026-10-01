@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-import os, sys, re
+import os
+import sys
+import re
 from datetime import datetime
 
-# Kivy multimedya ve arayüz çekirdeği
+# 🔑 KRAL KURAL: Önce Kivy çekirdeğini ayağa kaldırıyoruz
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -15,7 +17,8 @@ from kivy.uix.popup import Popup
 from kivy.uix.video import Video
 from kivy.core.window import Window
 from kivy.clock import Clock
-from kivy.network.urlrequest import UrlRequest # Android uyumlu kararlı internet motoru
+from kivy.network.urlrequest import UrlRequest
+from kivy.metrics import dp # 📺 TV ve tabletler için akıllı piksel ölçekleyici
 
 class IPTVCoreLogic:
     def __init__(self):
@@ -70,43 +73,44 @@ class CinemaIPTVAndroid(BoxLayout):
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_motion=self.on_mouse_motion)
 
-        # SOL PANEL: Kategoriler ve Arama
-        self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.35, 1), padding=10, spacing=10)
-        self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=None, height=45, background_color=(0.17, 0.47, 0.89, 1))
+        # 📺 SOL PANEL: Oranlar geniş ekranlar için %30'a düşürüldü (Taşma engellendi)
+        self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
+        self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
         self.server_btn.bind(on_release=self.show_server_popup)
         self.left_panel.addWidget(self.server_btn)
 
-        self.search_input = TextInput(hint_text="Film/Kanal Ara...", multiline=False, size_hint_y=None, height=40, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+        self.search_input = TextInput(hint_text="Film/Kanal Ara...", multiline=False, size_hint_y=0.07, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
         self.left_panel.addWidget(self.search_input)
 
-        self.scroll_groups = ScrollView()
-        self.group_layout = GridLayout(cols=1, spacing=5, size_hint_y=None)
+        self.scroll_groups = ScrollView(size_hint_y=0.85)
+        self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
         self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
         self.scroll_groups.addWidget(self.group_layout)
-        self.left_panel.addWidget(Label(text="📁 KATEGORİLER", size_hint_y=None, height=20, font_size=12))
+        
+        self.left_panel.addWidget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
         self.left_panel.addWidget(self.scroll_groups)
         self.add_widget(self.left_panel)
 
-        # ORTA PANEL: Video Alanı
-        self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.65, 1), padding=10, spacing=5)
-        self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=None, height=30, font_size=14)
+        # 📺 ORTA PANEL: Video ve HUD Kumanda Alanı %70 kaplayacak şekilde esnetildi
+        self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.70, 1), padding=dp(8), spacing=dp(4))
+        self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
         self.center_panel.addWidget(self.status_label)
 
-        self.video = Video(source='', state='stop', options={'eos': 'loop'})
+        self.video = Video(source='', state='stop', options={'eos': 'loop'}, size_hint_y=0.80)
         self.center_panel.addWidget(self.video)
 
-        # ÇİFT KATMANLI ŞEFFAF HUD KUMANDA PANELİ (Mavi/Koyu Renk Temalı)
-        self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=None, height=85, padding=10, spacing=5)
-        self.hud_time_row = BoxLayout(orientation='horizontal', spacing=10, size_hint_y=None, height=30)
-        self.time_curr = Label(text="00:00:00", size_hint_x=None, width=60)
-        self.timeline = Slider(min=0, max=100, value=0)
-        self.time_total = Label(text="00:00:00", size_hint_x=None, width=60)
+        # 📺 ŞEFFAF HUD KUMANDA PANELİ: Sabit yükseklik yerine %15 yüzdelik oran atandı
+        self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
+        self.hud_time_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.40)
+        self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
+        self.timeline = Slider(min=0, max=100, value=0, size_hint_x=0.70)
+        self.time_total = Label(text="00:00:00", size_hint_x=0.15)
         self.hud_time_row.addWidget(self.time_curr)
         self.hud_time_row.addWidget(self.timeline)
         self.hud_time_row.addWidget(self.time_total)
         self.hud_panel.addWidget(self.hud_time_row)
 
-        self.hud_ctrl_row = BoxLayout(orientation='horizontal', spacing=10, size_hint_y=None, height=40)
+        self.hud_ctrl_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.60)
         self.play_btn = Button(text="▶ Oynat", background_color=(0.17, 0.47, 0.89, 1))
         self.play_btn.bind(on_release=self.toggle_play)
         self.ss_btn = Button(text="📸 Ekran Al", background_color=(0.4, 0.76, 0.23, 1))
@@ -123,6 +127,7 @@ class CinemaIPTVAndroid(BoxLayout):
         self.add_widget(self.center_panel)
 
         Clock.schedule_interval(self.update_hud, 1.0)
+
     def toggle_play(self, instance=None):
         if self.video.state == 'play':
             self.video.state = 'stop'
@@ -140,13 +145,13 @@ class CinemaIPTVAndroid(BoxLayout):
             self.time_total.text = str(int(self.video.duration))
 
     def show_server_popup(self, instance):
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        self.file_input = TextInput(text="playlist.m3u", hint_text="M3U Dosya Adı", multiline=False)
-        load_btn = Button(text="Listeyi Yükle", background_color=(0.4, 0.76, 0.23, 1))
-        content.addWidget(Label(text="Yerel M3U Dosya Adını Girin:"))
+        content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+        self.file_input = TextInput(text="playlist.m3u", hint_text="M3U Dosya Adı", multiline=False, size_hint_y=0.40)
+        load_btn = Button(text="Listeyi Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
+        content.addWidget(Label(text="Yerel M3U Dosya Adını Girin:", size_hint_y=0.20))
         content.addWidget(self.file_input)
         content.addWidget(load_btn)
-        popup = Popup(title='IPTV Yükleme Paneli', content=content, size_hint=(0.8, 0.5))
+        popup = Popup(title='IPTV Yükleme Paneli', content=content, size_hint=(0.7, 0.4))
         
         def do_load(inst):
             if self.core.parse_m3u(self.file_input.text):
@@ -161,13 +166,13 @@ class CinemaIPTVAndroid(BoxLayout):
     def populate_groups(self):
         self.group_layout.clear_widgets()
         for g_name in sorted(self.core.channels_by_group.keys()):
-            btn = Button(text=g_name, size_hint_y=None, height=40, background_color=(0.2, 0.2, 0.2, 1))
+            btn = Button(text=g_name, size_hint_y=None, height=dp(38), background_color=(0.2, 0.2, 0.2, 1))
             btn.bind(on_release=lambda instance, name=g_name: self.load_channels(name))
             self.group_layout.addWidget(btn)
 
     def load_channels(self, group_name):
         self.group_layout.clear_widgets()
-        back_btn = Button(text="⬅️ KATEGORİLERE DÖN", size_hint_y=None, height=45, background_color=(0.8, 0.2, 0.2, 1))
+        back_btn = Button(text="⬅ KATEGORİLERE DÖN", size_hint_y=None, height=dp(40), background_color=(0.8, 0.2, 0.2, 1))
         back_btn.bind(on_release=lambda inst: self.populate_groups())
         self.group_layout.addWidget(back_btn)
 
@@ -175,9 +180,9 @@ class CinemaIPTVAndroid(BoxLayout):
         grouped_shows = self.core.group_shows(ch_list)
 
         for show_name, episodes in grouped_shows.items():
-            btn = Button(text=f"🎬 {show_name} ({len(episodes)} Blm)", size_hint_y=None, height=40)
+            btn = Button(text=f"🎬 {show_name}", size_hint_y=None, height=dp(38))
             if episodes:
-                btn.bind(on_release=lambda instance, url=episodes[0]["url"], name=show_name: self.start_playback(url, name))
+                btn.bind(on_release=lambda instance, url=episodes["url"], name=show_name: self.start_playback(url, name))
             self.group_layout.addWidget(btn)
 
     def start_playback(self, url, name):
@@ -197,19 +202,21 @@ class CinemaIPTVAndroid(BoxLayout):
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
             self.remove_widget(self.left_panel)
+            self.center_panel.size_hint = (1, 1)
             self.is_fullscreen = True
         else:
+            self.center_panel.size_hint = (0.70, 1)
             self.add_widget(self.left_panel, index=1)
             self.is_fullscreen = False
 
     def on_key_down(self, window, key, scancode, codepoint, modifier):
-        if key == 273: # TV Kumandası YUKARI tuşu
+        if key == 273: 
             self.current_volume = min(1.0, self.current_volume + 0.05)
             self.video.volume = self.current_volume
-        elif key == 274: # TV Kumandası AŞAĞI tuşu
+        elif key == 274: 
             self.current_volume = max(0.0, self.current_volume - 0.05)
             self.video.volume = self.current_volume
-        elif key == 32: # TV Kumandası OK tuşu (Orta tuş)
+        elif key == 32: 
             self.toggle_play()
         return True
 
