@@ -33,6 +33,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
+    # 🛠️ AYAR DOSYASINI BURADA DOĞRUDAN SUNUCU İÇİNDE SIFIRDAN ÜRETİYORUZ
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -59,7 +60,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 TÜM DERLEYİCİ KATILIKLARINI VE TERMİNAL ENGELLERİNİ KALICI OLARAK ESNETEN NİHAİ ADIM
+    # 🚀 TERMINAL SORGULARINI (STTY) TAMAMEN BYPASS EDEN GÜVENLİ DERLEME MOTORU
     - name: Build Final APK
       run: |
         export TERM=xterm
@@ -71,3 +72,11 @@ jobs:
         APP_CYTHON_COMPILE_OPTIONS: "-X legacy_implicit_noexcept=True"
         CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion"
         CXXFLAGS: "-Wno-error=incompatible-pointer-types"
+
+    # 📥 DERLENEN HAZIR UYGULAMAYI İNDİRME ALANI OLARAK DIŞARI ÇIKARMA
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SelgeTV-Android-APK
+        path: bin/*.apk
+
