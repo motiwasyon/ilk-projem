@@ -33,7 +33,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🛠️ DISK YAZMA ENGELLERİNİ KÖKTEN ÇÖZEN SAF AYAR ENJEKSİYONU
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -60,14 +59,13 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 DISK YETKİ KİLİDİ VE SANAL EKRAN SARMALAYICISI (NİHAİ ADIM)
+    # 🚀 TÜM DERLEYİCİ SÜRÜM ENGELLERİNİ KALICI OLARAK ESNETEN GÜVENLİ ADIM
     - name: Build Final APK
       run: |
         export TERM=xterm
         export NONINTERACTIVE=1
         export DEBIAN_FRONTEND=noninteractive
         
-        # Sunucu klasörlerine tam okuma/yazma izni veriyoruz (Çökme bitecek)
         sudo chmod -R 777 .
         mkdir -p bin
         sudo chmod -R 777 bin
@@ -84,4 +82,3 @@ jobs:
       with:
         name: SelgeTV-Android-APK
         path: bin/*.apk
-
