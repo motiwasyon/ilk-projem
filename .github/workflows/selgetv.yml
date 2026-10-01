@@ -59,7 +59,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 TÜM DERLEYİCİ KATILIKLARINI VE SÜRÜM ENGELLERİNİ ESNETEN NİHAİ ADIM
+    # 🚀 TÜM DERLEYİCİ KATILIKLARINI VE TERMİNAL ENGELLERİNİ KALICI OLARAK ESNETEN NİHAİ ADIM
     - name: Build Final APK
       run: |
         export TERM=xterm
@@ -70,3 +70,4 @@ jobs:
         BUILDOZER_ALLOW_KIVY_NEW_DESIGN: 1
         APP_CYTHON_COMPILE_OPTIONS: "-X legacy_implicit_noexcept=True"
         CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion"
+        CXXFLAGS: "-Wno-error=incompatible-pointer-types"
