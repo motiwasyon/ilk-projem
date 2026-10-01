@@ -18,11 +18,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    # 🔑 SÜRÜM ÇAKIŞMASINI ENGELLEYEN DEĞİŞKENSİZ ANA MOTOR TANIMI
-    - name: Set up System Python
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x'
+        python-version: '3.11'
 
     - name: Install System Dependencies
       run: |
@@ -34,7 +33,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🛠️ AYAR DOSYASINI SUNUCU SÜRÜMÜNE GÖRE TAM UYUMLU OLARAK ENJEKTE EDİYORUZ
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -61,7 +59,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 TAM YETKİLİ, SESSİZ VE SARMALANMIŞ DERLEME MOTORU
+    # 🚀 TÜM DERLEYİCİ SÜRÜM ENGELLERİNİ KALICI OLARAK ESNETEN GÜVENLİ ADIM
     - name: Build Final APK
       run: |
         export TERM=xterm
@@ -79,7 +77,6 @@ jobs:
         CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion"
         CXXFLAGS: "-Wno-error=incompatible-pointer-types"
 
-    # 📥 BAŞARIYLA TAMAMLANAN UYGULAMAYI DISKA ÇIKARMA LİNKİ
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
