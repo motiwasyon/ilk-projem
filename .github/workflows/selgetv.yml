@@ -33,6 +33,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
+    # 🛠️ DISK YAZMA ENGELLERİNİ KÖKTEN ÇÖZEN SAF AYAR ENJEKSİYONU
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -59,16 +60,28 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 TÜM DERLEYİCİ KATILIKLARINI VE SÜRÜM ENGELLERİNİ KALICI OLARAK ESNETEN NİHAİ ADIM
+    # 🚀 DISK YETKİ KİLİDİ VE SANAL EKRAN SARMALAYICISI (NİHAİ ADIM)
     - name: Build Final APK
       run: |
         export TERM=xterm
         export NONINTERACTIVE=1
         export DEBIAN_FRONTEND=noninteractive
+        
+        # Sunucu klasörlerine tam okuma/yazma izni veriyoruz (Çökme bitecek)
+        sudo chmod -R 777 .
+        mkdir -p bin
+        sudo chmod -R 777 bin
+        
         xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" buildozer -v android debug
       env:
         BUILDOZER_ALLOW_KIVY_NEW_DESIGN: 1
         APP_CYTHON_COMPILE_OPTIONS: "-X legacy_implicit_noexcept=True"
         CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion"
         CXXFLAGS: "-Wno-error=incompatible-pointer-types"
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SelgeTV-Android-APK
+        path: bin/*.apk
 
