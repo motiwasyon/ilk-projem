@@ -28,8 +28,7 @@ android.add_compile_options = sourceCompatibility = JavaVersion.VERSION_1_8, tar
 android.manifest.application_arguments = android:usesCleartextTraffic="true"
 android.gradle_dependencies =
 
-# 📺 Android TV ve Normal Başlatıcı Düzeltilmiş Tek Satır Filtresi:
-android.manifest.intent_filters = [{"action": "android.intent.action.MAIN", "category": ["android.intent.category.LEANBACK_LAUNCHER", "android.intent.category.LAUNCHER"]}]
+# ÇÖKMEYE SEBEP OLAN INTENT_FILTERS SATIRI KALDIRILDI! (YUKARIDAKİ WORKFLOW OTOMATİK HALLEDECEK)
 
 android.archs = arm64-v8a
 p4a.branch = release-2024.01.21
@@ -39,3 +38,4 @@ android.allow_backup = True
 [buildozer]
 log_level = 2
 warn_on_root = 1
+
