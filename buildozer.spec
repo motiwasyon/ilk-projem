@@ -1,17 +1,16 @@
-
 [app]
 title = Selge TV
 package.name = selgetv
 package.domain = org.selgeproje
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json
+source.include_exts = py,png,jpg,kv,atlas,json,m3u
 version = 1.7
 source.exclude_dirs = tests, test, bst, bin, venv, env
 
 # 🚀 GEREKSİNİMLER
 requirements = python3,kivy==2.3.0
 
-orientation = all
+orientation = landscape
 fullscreen = 1
 
 # =============================================================================
@@ -21,6 +20,7 @@ android.accept_sdk_license = True
 android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 android.api = 33
 android.minapi = 26
+android.ndk_api = 26
 android.build_tools_version = 33.0.2
 android.enable_androidx = True
 
@@ -28,13 +28,10 @@ android.add_compile_options = sourceCompatibility = JavaVersion.VERSION_1_8, tar
 android.manifest.application_arguments = android:usesCleartextTraffic="true"
 android.gradle_dependencies =
 
-android.manifest.intent_filters = [ {"action": "android.intent.action.MAIN", "category": ["android.intent.category.LEANBACK_LAUNCHER", "android.intent.category.LAUNCHER"]} ]
-android.archs = armeabi-v7a, arm64-v8a
+# 📺 Android TV ve Normal Başlatıcı Düzeltilmiş Tek Satır Filtresi:
+android.manifest.intent_filters = [{"action": "android.intent.action.MAIN", "category": ["android.intent.category.LEANBACK_LAUNCHER", "android.intent.category.LAUNCHER"]}]
 
-# ⚡ NİHAİ ÇÖZÜM: Gereksiz kütüphaneler hariç tutuldu
-android.p4a_extra_args = --exclude-libs=libestdc++,test,unittest,tkinter,pydoc,distutils,libjxl,brotli,highway,libavif,lcms,lodepng,sjpeg,skcms,googletest --no-deps
-
-
+android.archs = arm64-v8a
 p4a.branch = release-2024.01.21
 android.ndk = 25b
 android.allow_backup = True
