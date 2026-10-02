@@ -18,10 +18,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up System Python
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x'
+        python-version: '3.11'
 
     - name: Install System Dependencies
       run: |
@@ -33,7 +33,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🛠️ AYAR DOSYASINDA SÜRÜM DAYATMASINI KALDIRIP SAF PYTHON3 BAĞLANTISI YAPIYORUZ
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -60,7 +59,7 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 🚀 SÜRÜM SİGORTALI TAM YETKİLİ VE SANAL SARMALANMIŞ DERLEME MOTORU
+    # 🚀 TÜM DERLEYİCİ KATILIKLARINI VE SÜRÜM ENGELLERİNİ KALICI OLARAK ESNETEN NİHAİ ADIM
     - name: Build Final APK
       run: |
         export TERM=xterm
@@ -77,10 +76,4 @@ jobs:
         APP_CYTHON_COMPILE_OPTIONS: "-X legacy_implicit_noexcept=True"
         CFLAGS: "-Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion"
         CXXFLAGS: "-Wno-error=incompatible-pointer-types"
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: SelgeTV-Android-APK
-        path: bin/*.apk
 
