@@ -248,6 +248,61 @@ class CinemaIPTVAndroid(BoxLayout):
         except Exception as e:
             # Herhangi bir izin hatasında uygulamanın tamamen kapanmasını (çökmesini) engeller
             self.status_label.text = "❌ Ekran Alınamadı (İzin Hatası)"
+       
+        def parse_m3u(self, file_path):
+        self.channels_by_group = {}
+        try:
+            # 📱 Android işletim sisteminde dosya yolunu korumalı alana yönlendiriyoruz
+            if not os.path.isabs(file_path):
+                from kivy.app import App
+                file_path = os.path.join(App.get_running_app().user_data_dir, file_path)
+                
+            if not os.path.exists(file_path):
+                return False
+
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                name, group = None, "Diger"
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("#EXTINF"):
+                        g_match = re.search(r'group-title="([^"]+)"', line)
+                        group = g_match.group(1).strip() if g_match else "Diger"
+                        idx = line.rfind(',')
+                        name = line[idx+1:].strip() if idx != -1 else "Kanal"
+                    elif line.startswith("http") and name:
+                        if group not in self.channels_by_group:
+                            self.channels_by_group[group] = []
+                        self.channels_by_group[group].append({"name": name, "url": line})
+                        name = None
+            return True
+        except Exception as e:
+            return False
+
+    def show_server_popup(self, instance):
+        try:
+            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+            self.file_input = TextInput(text="playlist.m3u", hint_text="M3U Dosya Adı", multiline=False, size_hint_y=0.40)
+            load_btn = Button(text="Listeyi Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
+            content.addWidget(Label(text="Yerel M3U Dosya Adını Girin:", size_hint_y=0.20))
+            content.addWidget(self.file_input)
+            content.addWidget(load_btn)
+            popup = Popup(title='IPTV Yükleme Paneli', content=content, size_hint=(0.7, 0.4))
+            
+            def do_load(inst):
+                try:
+                    if self.core.parse_m3u(self.file_input.text):
+                        self.status_label.text = "✅ IPTV Listesi Yüklendi!"
+                        self.populate_groups()
+                        popup.dismiss()
+                    else:
+                        self.status_label.text = "❌ Dosya Bulunamadı!"
+                except Exception as e:
+                    self.status_label.text = "❌ Yükleme Hatası!"
+                    
+            load_btn.bind(on_release=do_load)
+            popup.open()
+        except Exception as e:
+            self.status_label.text = "❌ Panel Açma Hatası"
 
 class CinemaIPTVApp(App):
     def build(self):
