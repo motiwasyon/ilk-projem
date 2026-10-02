@@ -228,10 +228,26 @@ class CinemaIPTVAndroid(BoxLayout):
     def fade_hud(self, dt):
         self.hud_panel.opacity = 0.0
 
-    def take_screenshot(self, instance=None):
-        save_path = f"ss_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-        Window.screenshot(name=save_path)
-        self.status_label.text = "📸 Tüm Ekran Galeriye Kaydedildi!"
+        def take_screenshot(self, instance=None):
+        try:
+            # 📱 Android'in engellemeyeceği güvenli ve korumalı uygulama içi klasörü seçiyoruz
+            from kivy.app import App
+            
+            # Uygulamanın kendine ait gizli saklama alanını bulur
+            safe_dir = App.get_running_app().user_data_dir
+            
+            # Klasör yoksa güvenli bir şekilde oluşturur
+            if not os.path.exists(safe_dir):
+                os.makedirs(safe_dir)
+                
+            save_path = os.path.join(safe_dir, f"ss_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
+            
+            # Ekran görüntüsünü güvenli dizine kaydeder
+            Window.screenshot(name=save_path)
+            self.status_label.text = "📸 Ekran Görüntüsü Güvenli Alana Kaydedildi!"
+        except Exception as e:
+            # Herhangi bir izin hatasında uygulamanın tamamen kapanmasını (çökmesini) engeller
+            self.status_label.text = "❌ Ekran Alınamadı (İzin Hatası)"
 
 class CinemaIPTVApp(App):
     def build(self):
