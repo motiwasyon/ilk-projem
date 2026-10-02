@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import re
 from datetime import datetime
 
-# 🔑 KRAL KURAL: Önce Kivy çekirdeğini ayağa kaldırıyoruz
+# 🔑 Önce Kivy çekirdeğini ayağa kaldırıyoruz
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -18,50 +17,11 @@ from kivy.uix.video import Video
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
-from kivy.metrics import dp # 📺 TV ve tabletler için akıllı piksel ölçekleyici
+from kivy.metrics import dp 
 
-class IPTVCoreLogic:
-    def __init__(self):
-        self.channels_by_group = {}
-        self.current_group_channels = []
+# 📦 Birinci parçayı içeri aktarıyoruz
+from iptv_core import IPTVCoreLogic
 
-    def parse_m3u(self, file_path):
-        self.channels_by_group = {}
-        try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                name, group = None, "Diger"
-                for line in f:
-                    line = line.strip()
-                    if line.startswith("#EXTINF"):
-                        g_match = re.search(r'group-title="([^"]+)"', line)
-                        group = g_match.group(1).strip() if g_match else "Diger"
-                        idx = line.rfind(',')
-                        name = line[idx+1:].strip() if idx != -1 else "Kanal"
-                    elif line.startswith("http") and name:
-                        if group not in self.channels_by_group:
-                            self.channels_by_group[group] = []
-                        self.channels_by_group[group].append({"name": name, "url": line})
-                        name = None
-            return True
-        except:
-            return False
-
-    def group_shows(self, channel_list):
-        shows = {}
-        for c in channel_list:
-            ch_name = c["name"]
-            match = re.search(r'(.*?)\s+([Ss]\d+\s*[Ee]\d+|[Ss]\d+[Ee]\d+|[Ss]ezon\s+\d+|[Bb]ölüm\s+\d+)', ch_name)
-            if match:
-                show_name = match.group(1).strip()
-                ep_name = match.group(2).strip()
-                remaining = ch_name[match.end():].strip()
-                if remaining: ep_name = f"{ep_name} {remaining}"
-            else:
-                show_name = ch_name
-                ep_name = "Oynat"
-            if show_name not in shows: shows[show_name] = []
-            shows[show_name].append({"ep_name": ep_name, "url": c["url"], "full_name": ch_name})
-        return shows
 class CinemaIPTVAndroid(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -73,7 +33,7 @@ class CinemaIPTVAndroid(BoxLayout):
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_motion=self.on_mouse_motion)
 
-        # 📺 SOL PANEL: Oranlar geniş ekranlar için %30'a düşürüldü (Taşma engellendi)
+        # 📺 SOL PANEL
         self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
         self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
         self.server_btn.bind(on_release=self.show_server_popup)
@@ -91,7 +51,7 @@ class CinemaIPTVAndroid(BoxLayout):
         self.left_panel.addWidget(self.scroll_groups)
         self.add_widget(self.left_panel)
 
-        # 📺 ORTA PANEL: Video ve HUD Kumanda Alanı %70 kaplayacak şekilde esnetildi
+        # 📺 ORTA PANEL
         self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.70, 1), padding=dp(8), spacing=dp(4))
         self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
         self.center_panel.addWidget(self.status_label)
@@ -99,7 +59,7 @@ class CinemaIPTVAndroid(BoxLayout):
         self.video = Video(source='', state='stop', options={'eos': 'loop'}, size_hint_y=0.80)
         self.center_panel.addWidget(self.video)
 
-        # 📺 ŞEFFAF HUD KUMANDA PANELİ: Sabit yükseklik yerine %15 yüzdelik oran atandı
+        # 📺 ŞEFFAF HUD KUMANDA PANELİ
         self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
         self.hud_time_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.40)
         self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
@@ -145,23 +105,30 @@ class CinemaIPTVAndroid(BoxLayout):
             self.time_total.text = str(int(self.video.duration))
 
     def show_server_popup(self, instance):
-        content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
-        self.file_input = TextInput(text="playlist.m3u", hint_text="M3U Dosya Adı", multiline=False, size_hint_y=0.40)
-        load_btn = Button(text="Listeyi Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
-        content.addWidget(Label(text="Yerel M3U Dosya Adını Girin:", size_hint_y=0.20))
-        content.addWidget(self.file_input)
-        content.addWidget(load_btn)
-        popup = Popup(title='IPTV Yükleme Paneli', content=content, size_hint=(0.7, 0.4))
-        
-        def do_load(inst):
-            if self.core.parse_m3u(self.file_input.text):
-                self.status_label.text = "✅ IPTV Listesi Yüklendi!"
-                self.populate_groups()
-                popup.dismiss()
-            else:
-                self.status_label.text = "❌ Dosya Bulunamadı!"
-        load_btn.bind(on_release=do_load)
-        popup.open()
+        try:
+            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+            self.file_input = TextInput(text="playlist.m3u", hint_text="M3U Dosya Adı", multiline=False, size_hint_y=0.40)
+            load_btn = Button(text="Listeyi Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
+            content.addWidget(Label(text="Yerel M3U Dosya Adını Girin:", size_hint_y=0.20))
+            content.addWidget(self.file_input)
+            content.addWidget(load_btn)
+            popup = Popup(title='IPTV Yükleme Paneli', content=content, size_hint=(0.7, 0.4))
+            
+            def do_load(inst):
+                try:
+                    if self.core.parse_m3u(self.file_input.text):
+                        self.status_label.text = "✅ IPTV Listesi Yüklendi!"
+                        self.populate_groups()
+                        popup.dismiss()
+                    else:
+                        self.status_label.text = "❌ Dosya Bulunamadı!"
+                except Exception as e:
+                    self.status_label.text = "❌ Yükleme Hatası!"
+                    
+            load_btn.bind(on_release=do_load)
+            popup.open()
+        except Exception as e:
+            self.status_label.text = "❌ Panel Açma Hatası"
 
     def populate_groups(self):
         self.group_layout.clear_widgets()
@@ -228,81 +195,20 @@ class CinemaIPTVAndroid(BoxLayout):
     def fade_hud(self, dt):
         self.hud_panel.opacity = 0.0
 
-        def take_screenshot(self, instance=None):
+    def take_screenshot(self, instance=None):
         try:
-            # 📱 Android'in engellemeyeceği güvenli ve korumalı uygulama içi klasörü seçiyoruz
+            # 📱 Android Scoped Storage uyumlu korumalı dizin kaydı
             from kivy.app import App
-            
-            # Uygulamanın kendine ait gizli saklama alanını bulur
             safe_dir = App.get_running_app().user_data_dir
             
-            # Klasör yoksa güvenli bir şekilde oluşturur
             if not os.path.exists(safe_dir):
                 os.makedirs(safe_dir)
                 
             save_path = os.path.join(safe_dir, f"ss_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
-            
-            # Ekran görüntüsünü güvenli dizine kaydeder
             Window.screenshot(name=save_path)
-            self.status_label.text = "📸 Ekran Görüntüsü Güvenli Alana Kaydedildi!"
+            self.status_label.text = "📸 Ekran Güvenli Alana Kaydedildi!"
         except Exception as e:
-            # Herhangi bir izin hatasında uygulamanın tamamen kapanmasını (çökmesini) engeller
             self.status_label.text = "❌ Ekran Alınamadı (İzin Hatası)"
-       
-        def parse_m3u(self, file_path):
-        self.channels_by_group = {}
-        try:
-            # 📱 Android işletim sisteminde dosya yolunu korumalı alana yönlendiriyoruz
-            if not os.path.isabs(file_path):
-                from kivy.app import App
-                file_path = os.path.join(App.get_running_app().user_data_dir, file_path)
-                
-            if not os.path.exists(file_path):
-                return False
-
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                name, group = None, "Diger"
-                for line in f:
-                    line = line.strip()
-                    if line.startswith("#EXTINF"):
-                        g_match = re.search(r'group-title="([^"]+)"', line)
-                        group = g_match.group(1).strip() if g_match else "Diger"
-                        idx = line.rfind(',')
-                        name = line[idx+1:].strip() if idx != -1 else "Kanal"
-                    elif line.startswith("http") and name:
-                        if group not in self.channels_by_group:
-                            self.channels_by_group[group] = []
-                        self.channels_by_group[group].append({"name": name, "url": line})
-                        name = None
-            return True
-        except Exception as e:
-            return False
-
-    def show_server_popup(self, instance):
-        try:
-            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
-            self.file_input = TextInput(text="playlist.m3u", hint_text="M3U Dosya Adı", multiline=False, size_hint_y=0.40)
-            load_btn = Button(text="Listeyi Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
-            content.addWidget(Label(text="Yerel M3U Dosya Adını Girin:", size_hint_y=0.20))
-            content.addWidget(self.file_input)
-            content.addWidget(load_btn)
-            popup = Popup(title='IPTV Yükleme Paneli', content=content, size_hint=(0.7, 0.4))
-            
-            def do_load(inst):
-                try:
-                    if self.core.parse_m3u(self.file_input.text):
-                        self.status_label.text = "✅ IPTV Listesi Yüklendi!"
-                        self.populate_groups()
-                        popup.dismiss()
-                    else:
-                        self.status_label.text = "❌ Dosya Bulunamadı!"
-                except Exception as e:
-                    self.status_label.text = "❌ Yükleme Hatası!"
-                    
-            load_btn.bind(on_release=do_load)
-            popup.open()
-        except Exception as e:
-            self.status_label.text = "❌ Panel Açma Hatası"
 
 class CinemaIPTVApp(App):
     def build(self):
