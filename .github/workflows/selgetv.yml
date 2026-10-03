@@ -54,7 +54,9 @@ jobs:
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "p4a.branch = release-2024.01.21" >> buildozer.spec
         echo "android.manifest.intent_filters = " >> buildozer.spec
-        
+        sed -i 's/addWidget/add_widget/g' main.py 2>/dev/null || true
+        sed -i 's/addwidget/add_widget/g' main.py 2>/dev/null || true
+ 
     - name: Accept Android Licenses
       run: |
         mkdir -p ~/.android
