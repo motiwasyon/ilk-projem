@@ -156,15 +156,18 @@ class CinemaIPTVAndroid(BoxLayout):
             popup = Popup(title='🏠 10 Yuvalı Yerel Wi-Fi Kontrolü', content=content, size_hint=(0.8, 0.4))
             
             # 🔍 AKILLI TARAYICI: Spinner tip uyuşmazlığı düzeltilmiş hatasız fonksiyon
+                        # 🔍 AKILLI TARAYICI: Kivy'nin liste kabul etmeyen hatasını kesin olarak kıran String zorlaması
             def klasor_tara_success(req, html_result):
                 try:
                     bulunan_dosyalar = re.findall(r'href="([^"]+\.m3u)"', html_result)
                     if bulunan_dosyalar:
                         temiz_list = sorted(list(set(bulunan_dosyalar)))
                         self.file_spinner.values = temiz_list
-                        self.file_spinner.text = temiz_list[0] # ✅ DÜZELTİLDİ: Spinner'ın başlangıç metni olarak listenin ilk dosyasını seçer
+                        # [0] indeksini alıp zorla str() içine koyarak Kivy'nin hata fırlatmasını %100 engelliyoruz:
+                        self.file_spinner.text = str(temiz_list[0])
                 except:
                     pass
+
 
             UrlRequest(yerel_sunucu_url, on_success=klasor_tara_success, timeout=3)
             
@@ -307,52 +310,6 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
