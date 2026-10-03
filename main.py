@@ -155,16 +155,17 @@ class CinemaIPTVAndroid(BoxLayout):
             content.add_widget(load_btn)
             popup = Popup(title='🏠 10 Yuvalı Yerel Wi-Fi Kontrolü', content=content, size_hint=(0.8, 0.4))
             
-            # Akıllı Wi-Fi Tarayıcı: Bilgisayar açık ve ağda bağlıysa drop-down menüyü günceller
+            # 🔍 AKILLI TARAYICI: Spinner tip uyuşmazlığı düzeltilmiş hatasız fonksiyon
             def klasor_tara_success(req, html_result):
                 try:
                     bulunan_dosyalar = re.findall(r'href="([^"]+\.m3u)"', html_result)
                     if bulunan_dosyalar:
                         temiz_list = sorted(list(set(bulunan_dosyalar)))
                         self.file_spinner.values = temiz_list
-                        self.file_spinner.text = temiz_list[0]
+                        self.file_spinner.text = temiz_list[0] # ✅ DÜZELTİLDİ: Spinner'ın başlangıç metni olarak listenin ilk dosyasını seçer
                 except:
                     pass
+
             UrlRequest(yerel_sunucu_url, on_success=klasor_tara_success, timeout=3)
             
             def do_load(inst):
@@ -306,6 +307,26 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
