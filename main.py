@@ -24,81 +24,91 @@ from iptv_core import IPTVCoreLogic
 
 class CinemaIPTVAndroid(BoxLayout):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.orientation = 'horizontal'
-        self.core = IPTVCoreLogic()
-        self.current_volume = 0.7
-        self.is_fullscreen = False
-        
-        Window.bind(on_key_down=self.on_key_down)
-        Window.bind(on_motion=self.on_mouse_motion)
+        try:
+            super().__init__(**kwargs)
+            self.orientation = 'horizontal'
+            self.core = IPTVCoreLogic()
+            self.current_volume = 0.7
+            self.is_fullscreen = False
+            
+            Window.bind(on_key_down=self.on_key_down)
+            Window.bind(on_motion=self.on_mouse_motion)
 
-        # 📺 SOL PANEL
-        self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
-        self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
-        self.server_btn.bind(on_release=self.show_server_popup)
-        self.left_panel.addWidget(self.server_btn)
+            # 📺 SOL PANEL
+            self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
+            self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
+            self.server_btn.bind(on_release=self.show_server_popup)
+            self.left_panel.addWidget(self.server_btn)
 
-        self.search_input = TextInput(hint_text="Film/Kanal Ara...", multiline=False, size_hint_y=0.07, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
-        self.left_panel.addWidget(self.search_input)
+            self.search_input = TextInput(hint_text="Film/Kanal Ara...", multiline=False, size_hint_y=0.07, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            self.left_panel.addWidget(self.search_input)
 
-        self.scroll_groups = ScrollView(size_hint_y=0.85)
-        self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
-        self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
-        self.scroll_groups.addWidget(self.group_layout)
-        
-        self.left_panel.addWidget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
-        self.left_panel.addWidget(self.scroll_groups)
-        self.add_widget(self.left_panel)
+            self.scroll_groups = ScrollView(size_hint_y=0.85)
+            self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
+            self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
+            self.scroll_groups.addWidget(self.group_layout)
+            
+            self.left_panel.addWidget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
+            self.left_panel.addWidget(self.scroll_groups)
+            self.add_widget(self.left_panel)
 
-        # 📺 ORTA PANEL
-        self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.70, 1), padding=dp(8), spacing=dp(4))
-        self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
-        self.center_panel.addWidget(self.status_label)
+            # 📺 ORTA PANEL
+            self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.70, 1), padding=dp(8), spacing=dp(4))
+            self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
+            self.center_panel.addWidget(self.status_label)
 
-        self.video = Video(source='', state='stop', options={'eos': 'loop'}, size_hint_y=0.80)
-        self.center_panel.addWidget(self.video)
+            # 📱 KORUMALI VİDEO MOTORU BAŞLATMA ALANI
+            try:
+                self.video = Video(source='', state='stop', options={'eos': 'loop'}, size_hint_y=0.80)
+                self.video.unload()
+                self.center_panel.addWidget(self.video)
+            except Exception as video_err:
+                self.video = None
+                self.center_panel.addWidget(Label(text="⚠️ Video Çözücü Başlatılamadı.\nSadece Liste Modu Aktif.", size_hint_y=0.80))
 
-        # 📺 ŞEFFAF HUD KUMANDA PANELİ
-        self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
-        self.hud_time_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.40)
-        self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
-        self.timeline = Slider(min=0, max=100, value=0, size_hint_x=0.70)
-        self.time_total = Label(text="00:00:00", size_hint_x=0.15)
-        self.hud_time_row.addWidget(self.time_curr)
-        self.hud_time_row.addWidget(self.timeline)
-        self.hud_time_row.addWidget(self.time_total)
-        self.hud_panel.addWidget(self.hud_time_row)
+            # 📺 ŞEFFAF HUD KUMANDA PANELİ
+            self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
+            self.hud_time_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.40)
+            self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
+            self.timeline = Slider(min=0, max=100, value=0, size_hint_x=0.70)
+            self.time_total = Label(text="00:00:00", size_hint_x=0.15)
+            self.hud_time_row.addWidget(self.time_curr)
+            self.hud_time_row.addWidget(self.timeline)
+            self.hud_time_row.addWidget(self.time_total)
+            self.hud_panel.addWidget(self.hud_time_row)
 
-        self.hud_ctrl_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.60)
-        self.play_btn = Button(text="▶ Oynat", background_color=(0.17, 0.47, 0.89, 1))
-        self.play_btn.bind(on_release=self.toggle_play)
-        self.ss_btn = Button(text="📸 Ekran Al", background_color=(0.4, 0.76, 0.23, 1))
-        self.ss_btn.bind(on_release=self.take_screenshot)
-        self.fs_btn = Button(text="📺 Tam Ekran")
-        self.fs_btn.bind(on_release=self.toggle_fullscreen_mode)
-        
-        self.hud_ctrl_row.addWidget(self.play_btn)
-        self.hud_ctrl_row.addWidget(self.ss_btn)
-        self.hud_ctrl_row.addWidget(self.fs_btn)
-        self.hud_panel.addWidget(self.hud_ctrl_row)
+            self.hud_ctrl_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.60)
+            self.play_btn = Button(text="▶ Oynat", background_color=(0.17, 0.47, 0.89, 1))
+            self.play_btn.bind(on_release=self.toggle_play)
+            self.ss_btn = Button(text="📸 Ekran Al", background_color=(0.4, 0.76, 0.23, 1))
+            self.ss_btn.bind(on_release=self.take_screenshot)
+            self.fs_btn = Button(text="📺 Tam Ekran")
+            self.fs_btn.bind(on_release=self.toggle_fullscreen_mode)
+            
+            self.hud_ctrl_row.addWidget(self.play_btn)
+            self.hud_ctrl_row.addWidget(self.ss_btn)
+            self.hud_ctrl_row.addWidget(self.fs_btn)
+            self.hud_panel.addWidget(self.hud_ctrl_row)
 
-        self.center_panel.addWidget(self.hud_panel)
-        self.add_widget(self.center_panel)
+            self.center_panel.addWidget(self.hud_panel)
+            self.add_widget(self.center_panel)
 
-        Clock.schedule_interval(self.update_hud, 1.0)
+            Clock.schedule_interval(self.update_hud, 1.0)
+        except Exception as major_error:
+            self.clear_widgets()
+            self.add_widget(Label(text=f"🚨 Başlatma Hatası Yakalandı:\n{str(major_error)}"))
 
     def toggle_play(self, instance=None):
-        if self.video.state == 'play':
+        if self.video and self.video.state == 'play':
             self.video.state = 'stop'
             self.play_btn.text = "▶ Oynat"
-        else:
+        elif self.video:
             self.video.source = self.video.source
             self.video.state = 'play'
             self.play_btn.text = "⏸ Duraklat"
 
     def update_hud(self, dt):
-        if self.video.duration > 0:
+        if self.video and self.video.duration > 0:
             self.timeline.max = self.video.duration
             self.timeline.value = self.video.position
             self.time_curr.text = str(int(self.video.position))
@@ -149,10 +159,14 @@ class CinemaIPTVAndroid(BoxLayout):
         for show_name, episodes in grouped_shows.items():
             btn = Button(text=f"🎬 {show_name}", size_hint_y=None, height=dp(38))
             if episodes:
-                btn.bind(on_release=lambda instance, url=episodes["url"], name=show_name: self.start_playback(url, name))
+                first_ep_url = episodes["url"] if isinstance(episodes, list) else episodes.get("url", "")
+                btn.bind(on_release=lambda instance, url=first_ep_url, name=show_name: self.start_playback(url, name))
             self.group_layout.addWidget(btn)
 
     def start_playback(self, url, name):
+        if not self.video:
+            self.status_label.text = "⚠️ Video Oynatıcı Aktif Değil."
+            return
         self.video.unload()
         self.video.source = url
         self.video.state = 'play'
@@ -177,10 +191,10 @@ class CinemaIPTVAndroid(BoxLayout):
             self.is_fullscreen = False
 
     def on_key_down(self, window, key, scancode, codepoint, modifier):
-        if key == 273: 
+        if key == 273 and self.video: 
             self.current_volume = min(1.0, self.current_volume + 0.05)
             self.video.volume = self.current_volume
-        elif key == 274: 
+        elif key == 274 and self.video: 
             self.current_volume = max(0.0, self.current_volume - 0.05)
             self.video.volume = self.current_volume
         elif key == 32: 
@@ -197,13 +211,10 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def take_screenshot(self, instance=None):
         try:
-            # 📱 Android Scoped Storage uyumlu korumalı dizin kaydı
             from kivy.app import App
             safe_dir = App.get_running_app().user_data_dir
-            
             if not os.path.exists(safe_dir):
                 os.makedirs(safe_dir)
-                
             save_path = os.path.join(safe_dir, f"ss_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
             Window.screenshot(name=save_path)
             self.status_label.text = "📸 Ekran Güvenli Alana Kaydedildi!"
@@ -217,4 +228,6 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
 
