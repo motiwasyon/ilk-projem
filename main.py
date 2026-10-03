@@ -57,14 +57,14 @@ class CinemaIPTVAndroid(BoxLayout):
             self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
             self.center_panel.addWidget(self.status_label)
 
-            # 📱 KORUMALI VİDEO MOTORU BAŞLATMA ALANI
+            # 📱 KORUMALI VİDEO MOTORU BAŞLATMA ALANI (Hatalı addwidget komutları düzeltildi)
             try:
                 self.video = Video(source='', state='stop', options={'eos': 'loop'}, size_hint_y=0.80)
                 self.video.unload()
-                self.center_panel.addWidget(self.video)
+                self.center_panel.add_widget(self.video)
             except Exception as video_err:
                 self.video = None
-                self.center_panel.addWidget(Label(text="⚠️ Video Çözücü Başlatılamadı.\nSadece Liste Modu Aktif.", size_hint_y=0.80))
+                self.center_panel.add_widget(Label(text="⚠️ Video Çözücü Başlatılamadı.\nSadece Liste Modu Aktif.", size_hint_y=0.80))
 
             # 📺 ŞEFFAF HUD KUMANDA PANELİ
             self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
@@ -90,7 +90,8 @@ class CinemaIPTVAndroid(BoxLayout):
             self.hud_ctrl_row.addWidget(self.fs_btn)
             self.hud_panel.addWidget(self.hud_ctrl_row)
 
-            self.center_panel.addWidget(self.hud_panel)
+            self.center_panel.add_widget(self.hud_panel)
+            self.add_widget(self.left_panel) # Düzen düzeltildi
             self.add_widget(self.center_panel)
 
             Clock.schedule_interval(self.update_hud, 1.0)
