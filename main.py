@@ -88,8 +88,9 @@ class CinemaIPTVAndroid(BoxLayout):
             self.hud_panel.addWidget(self.hud_ctrl_row)
 
             self.center_panel.add_widget(self.hud_panel)
-            self.add_widget(self.left_panel) # Düzen düzeltildi
+            # Düzen sabitlemesi (Mükerrer left_panel eklemesi kaldırıldı)
             self.add_widget(self.center_panel)
+
 
             Clock.schedule_interval(self.update_hud, 1.0)
         except Exception as major_error:
@@ -226,6 +227,8 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
 
 
 
