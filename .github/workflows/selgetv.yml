@@ -10,16 +10,16 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4  # En güncel kararlı sürüm
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5  # v4 uyarısını çözen güncel paket
       with:
         distribution: 'temurin'
         java-version: '17'
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5  # En güncel kararlı sürüm
       with:
         python-version: '3.11'
 
@@ -33,7 +33,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install "cython>=0.29.33,<3.0.0" buildozer
 
-    # 🛠️ GÜVENLİ VE MANİFEST HATASIZ SIFIR AYAR ENJEKSİYONU
     - name: Inject Clean Buildozer Spec
       run: |
         echo "[app]" > buildozer.spec
@@ -61,23 +60,6 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | buildozer android debug --only-compile-deps || true
 
-    # 📺 ANDROID TV DESTEĞİNİ KODUN İÇİNDEN MANİFESTE GÜVENLİ ENJEKTE ETME ADIMI
-    - name: Patch Android Manifest for Android TV Support
-      run: |
-        # Temel Android projesinin oluşturulmasını tetikle
-        buildozer android intent_filters || true
-        
-        # python-for-android şablon manifest dosyasını bul ve içine LEANBACK_LAUNCHER kategorisini ekle
-        MANIFEST_TEMPLATE=$(find .buildozer/ -name "AndroidManifest.tmpl.xml" | head -n 1)
-        if [ -f "$MANIFEST_TEMPLATE" ]; then
-          echo "Manifest şablonu bulundu, TV desteği ekleniyor: $MANIFEST_TEMPLATE"
-          # LAUNCHER kategorisinin hemen altına LEANBACK_LAUNCHER kategorisini ekle
-          sed -i '/<category android:name="android.intent.category.LAUNCHER" \/>/a \                <category android:name="android.intent.category.LEANBACK_LAUNCHER" \/>' "$MANIFEST_TEMPLATE"
-        else
-          echo "Şablon dosyası henüz oluşmadı, ana derleme adımında otomatik yama denenecek."
-        fi
-
-    # 🚀 TAM YETKİLİ PAKETLEME SÜRECİ
     - name: Build Final APK
       run: |
         export TERM=xterm
@@ -88,11 +70,7 @@ jobs:
         mkdir -p bin
         sudo chmod -R 777 bin
         
-        # Derleme esnasında şablon tekrar üzerine yazılırsa diye yama işlemini sağlama alıyoruz
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bash -c '
-          (sleep 30 && MANIFEST_TEMPLATE=$(find .buildozer/ -name "AndroidManifest.tmpl.xml" | head -n 1) && [ -f "$MANIFEST_TEMPLATE" ] && sed -i '"'"'/<category android:name="android.intent.category.LAUNCHER" \/>/a \                <category android:name="android.intent.category.LEANBACK_LAUNCHER" \/>'"'"' "$MANIFEST_TEMPLATE" && echo "Arka plan manifest yaması başarılı.") &
-          buildozer -v android debug
-        '
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" buildozer -v android debug
       env:
         BUILDOZER_ALLOW_KIVY_NEW_DESIGN: 1
         APP_CYTHON_COMPILE_OPTIONS: "-X legacy_implicit_noexcept=True"
@@ -100,7 +78,7 @@ jobs:
         CXXFLAGS: "-Wno-error=incompatible-pointer-types"
 
     - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4  # En güncel kararlı sürüm
       with:
         name: SelgeTV-Android-APK
         path: bin/*.apk
