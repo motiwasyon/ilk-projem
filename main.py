@@ -57,14 +57,11 @@ class CinemaIPTVAndroid(BoxLayout):
             self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
             self.center_panel.addWidget(self.status_label)
 
-            # 📱 KORUMALI VİDEO MOTORU BAŞLATMA ALANI (Hatalı addwidget komutları düzeltildi)
-            try:
-                self.video = Video(source='', state='stop', options={'eos': 'loop'}, size_hint_y=0.80)
-                self.video.unload()
-                self.center_panel.add_widget(self.video)
-            except Exception as video_err:
-                self.video = None
-                self.center_panel.add_widget(Label(text="⚠️ Video Çözücü Başlatılamadı.\nSadece Liste Modu Aktif.", size_hint_y=0.80))
+            # 📺 SİYAH EKRAN KORUMASI: Başlangıçta boş video motoru yüklenmesini engelliyoruz
+            self.video = None
+            self.video_container = BoxLayout(size_hint_y=0.80)
+            self.video_container.add_widget(Label(text="🍿 Yayın İzlemek İçin Kanal Seçiniz", font_size=dp(14)))
+            self.center_panel.add_widget(self.video_container)
 
             # 📺 ŞEFFAF HUD KUMANDA PANELİ
             self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
@@ -229,6 +226,8 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
 
 
 
