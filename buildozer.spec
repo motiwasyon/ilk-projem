@@ -8,7 +8,7 @@ version = 1.7
 source.exclude_dirs = tests, test, bst, bin, venv, env
 
 # 🚀 GEREKSİNİMLER
-requirements = python3,kivy==2.3.0,requests,urllib3,chardet,certifi,idna
+requirements = python3,kivy==2.3.0,requests,urllib3,chardet,certifi,idna,ffpyplayer
 
 orientation = landscape
 fullscreen = 1
