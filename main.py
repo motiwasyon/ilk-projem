@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import re  # re kütüphanesini üste aldık
 from datetime import datetime
 
 # 🔑 Önce Kivy çekirdeğini ayağa kaldırıyoruz
@@ -19,8 +20,9 @@ from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
 from kivy.metrics import dp 
 
-# 📦 Birinci parçayı içeri aktarıyoruz
+# 📦 Birinci parçayı içeri aktarıyoruz (Çift olan satır teke düşürüldü)
 from iptv_core import IPTVCoreLogic
+
 
 class CinemaIPTVAndroid(BoxLayout):
     def __init__(self, **kwargs):
@@ -38,24 +40,24 @@ class CinemaIPTVAndroid(BoxLayout):
             self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
             self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
             self.server_btn.bind(on_release=self.show_server_popup)
-            self.left_panel.addWidget(self.server_btn)
+            self.left_panel.add_widget(self.server_btn)
 
             self.search_input = TextInput(hint_text="Film/Kanal Ara...", multiline=False, size_hint_y=0.07, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
-            self.left_panel.addWidget(self.search_input)
+            self.left_panel.add_widget(self.search_input)
 
             self.scroll_groups = ScrollView(size_hint_y=0.85)
             self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
             self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
-            self.scroll_groups.addWidget(self.group_layout)
+            self.scroll_groups.add_widget(self.group_layout)
             
-            self.left_panel.addWidget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
-            self.left_panel.addWidget(self.scroll_groups)
+            self.left_panel.add_widget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
+            self.left_panel.add_widget(self.scroll_groups)
             self.add_widget(self.left_panel)
 
             # 📺 ORTA PANEL
             self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.70, 1), padding=dp(8), spacing=dp(4))
             self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
-            self.center_panel.addWidget(self.status_label)
+            self.center_panel.add_widget(self.status_label)
 
             # 📺 SİYAH EKRAN KORUMASI: Başlangıçta boş video motoru yüklenmesini engelliyoruz
             self.video = None
@@ -69,10 +71,10 @@ class CinemaIPTVAndroid(BoxLayout):
             self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
             self.timeline = Slider(min=0, max=100, value=0, size_hint_x=0.70)
             self.time_total = Label(text="00:00:00", size_hint_x=0.15)
-            self.hud_time_row.addWidget(self.time_curr)
-            self.hud_time_row.addWidget(self.timeline)
-            self.hud_time_row.addWidget(self.time_total)
-            self.hud_panel.addWidget(self.hud_time_row)
+            self.hud_time_row.add_widget(self.time_curr)
+            self.hud_time_row.add_widget(self.timeline)
+            self.hud_time_row.add_widget(self.time_total)
+            self.hud_panel.add_widget(self.hud_time_row)
 
             self.hud_ctrl_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.60)
             self.play_btn = Button(text="▶ Oynat", background_color=(0.17, 0.47, 0.89, 1))
@@ -82,10 +84,10 @@ class CinemaIPTVAndroid(BoxLayout):
             self.fs_btn = Button(text="📺 Tam Ekran")
             self.fs_btn.bind(on_release=self.toggle_fullscreen_mode)
             
-            self.hud_ctrl_row.addWidget(self.play_btn)
-            self.hud_ctrl_row.addWidget(self.ss_btn)
-            self.hud_ctrl_row.addWidget(self.fs_btn)
-            self.hud_panel.addWidget(self.hud_ctrl_row)
+            self.hud_ctrl_row.add_widget(self.play_btn)
+            self.hud_ctrl_row.add_widget(self.ss_btn)
+            self.hud_ctrl_row.add_widget(self.fs_btn)
+            self.hud_panel.add_widget(self.hud_ctrl_row)
 
             self.center_panel.add_widget(self.hud_panel)
             # Düzen sabitlemesi (Mükerrer left_panel eklemesi kaldırıldı)
@@ -93,6 +95,14 @@ class CinemaIPTVAndroid(BoxLayout):
 
 
             Clock.schedule_interval(self.update_hud, 1.0)
+        
+            # 💾 OTOMATİK HAFIZA AÇILIŞI: En son yüklenen listeyi otomatik hatırlar
+            safe_dir = App.get_running_app().user_data_dir
+            son_liste_yolu = os.path.join(safe_dir, "aktif_yerel_liste.m3u")
+            if os.path.exists(son_liste_yolu):
+                if self.core.parse_m3u(son_liste_yolu):
+                    self.populate_groups()
+                    self.status_label.text = "💾 Kayıtlı IPTV Listesi Hafızadan Yüklendi."  
         except Exception as major_error:
             self.clear_widgets()
             self.add_widget(Label(text=f"🚨 Başlatma Hatası Yakalandı:\n{str(major_error)}"))
@@ -119,43 +129,89 @@ class CinemaIPTVAndroid(BoxLayout):
             from kivy.app import App
             
             content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+            safe_dir = App.get_running_app().user_data_dir
             
-            # 📱 TABLETİN GENEL DOWNLOAD KLASÖRÜNÜ HEDEF ALIYORUZ
-            download_dir = "/storage/emulated/0/Download"
+            # 🖥️ BİLGİSAYARINIZIN SABİT IP ADRESİ
+            # Kendi bilgisayarınızın IP'sini öğrendiğinizde buradaki "192.168.1.50" yazısını güncelleyin!
+            bilgisayar_ip = "192.168.1.208" 
+            yerel_sunucu_url = f"http://{bilgisayar_ip}:8080"
             
-            # Eğer kod bilgisayarda test ediliyorsa veya klasör yoksa korumalı alanı seçer
-            if not os.path.exists(download_dir):
-                download_dir = App.get_running_app().user_data_dir
+            # 📂 10 LİSTE HAFIZA YUVASI: Tablette kayıtlı duran 10 yuvayı tarar
+            hafizadaki_listeler = []
+            if os.path.exists(safe_dir):
+                hafizadaki_listeler = [f for f in os.listdir(safe_dir) if f.startswith("slot_") and f.endswith(".m3u")]
             
-            # Klasördeki tüm m3u dosyalarını orijinal isimleriyle otomatik tarar
-            m3u_files = []
-            if os.path.exists(download_dir):
-                m3u_files = [f for f in os.listdir(download_dir) if f.endswith('.m3u')]
+            # Kullanıcıya gösterilecek temiz isimleri ayıklar (Örn: slot_spor.m3u -> spor.m3u)
+            gosterim_isimleri = [f.replace("slot_", "") for f in hafizadaki_listeler]
+            
+            if not gosterim_isimleri:
+                gosterim_isimleri = ["liste1.m3u", "liste2.m3u", "liste3.m3u", "liste4.m3u", "liste5.m3u", "liste6.m3u", "liste7.m3u", "liste8.m3u", "liste9.m3u", "liste10.m3u"]
                 
-            if not m3u_files:
-                m3u_files = ["Klasörde M3U Bulunamadı.m3u"]
-                
-            # 🔄 Download klasöründeki tüm orijinal M3U'ları listeleyen açılır menü
-            self.file_spinner = Spinner(text=m3u_files[0], values=m3u_files, size_hint_y=0.40, background_color=(0.2, 0.2, 0.2, 1))
-            load_btn = Button(text="Seçilen Listeyi Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
+            self.file_spinner = Spinner(text=gosterim_isimleri, values=gosterim_isimleri, size_hint_y=0.40, background_color=(0.2, 0.2, 0.2, 1))
+            load_btn = Button(text="Yerel Ağdan Güncelle ve Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
             
-            content.add_widget(Label(text="Download Klasöründeki Listeler:", size_hint_y=0.20))
+            content.add_widget(Label(text="İzlemek/İndirmek İstediğiniz Listeyi Seçin:", size_hint_y=0.20))
             content.add_widget(self.file_spinner)
             content.add_widget(load_btn)
-            popup = Popup(title='Bulut / Download IPTV Paneli', content=content, size_hint=(0.7, 0.4))
+            popup = Popup(title='🏠 10 Yuvalı Yerel Wi-Fi Kontrolü', content=content, size_hint=(0.8, 0.4))
+            
+            # Akıllı Wi-Fi Tarayıcı: Bilgisayar açık ve ağda bağlıysa drop-down menüyü günceller
+            def klasor_tara_success(req, html_result):
+                try:
+                    bulunan_dosyalar = re.findall(r'href="([^"]+\.m3u)"', html_result)
+                    if bulunan_dosyalar:
+                        temiz_list = sorted(list(set(bulunan_dosyalar)))
+                        self.file_spinner.values = temiz_list
+                        self.file_spinner.text = temiz_list[0]
+                except:
+                    pass
+            UrlRequest(yerel_sunucu_url, on_success=klasor_tara_success, timeout=3)
             
             def do_load(inst):
                 try:
-                    # Seçilen dosyanın tam yolunu oluşturup parse işlemine gönderir
-                    tam_dosya_yolu = os.path.join(download_dir, self.file_spinner.text)
-                    if self.core.parse_m3u(tam_dosya_yolu):
-                        self.status_label.text = f"✅ {self.file_spinner.text} Başarıyla Yüklendi!"
-                        self.populate_groups()
-                        popup.dismiss()
-                    else:
-                        self.status_label.text = "❌ Liste Okunamadı!"
+                    secilen_dosya = self.file_spinner.text
+                    tam_yerel_url = f"{yerel_sunucu_url}/{secilen_dosya}"
+                    
+                    # Tabletin kendi içindeki kalıcı yuva adı
+                    safe_path = os.path.join(safe_dir, f"slot_{secilen_dosya}")
+                    aktif_yol = os.path.join(safe_dir, "aktif_yerel_liste.m3u")
+                    
+                    # 🚀 A: Bilgisayar Açıksa -> Bilgisayardan indirip kaydeder
+                    def on_success(req, result):
+                        try:
+                            with open(safe_path, "w", encoding="utf-8", errors="ignore") as f:
+                                f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
+                            
+                            # Aktif çalma listesi olarak kopyala
+                            with open(aktif_yol, "w", encoding="utf-8") as f:
+                                f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
+                                
+                            if self.core.parse_m3u(aktif_yol):
+                                self.status_label.text = f"✅ {secilen_dosya} Bilgisayardan İndirildi ve Kaydedildi!"
+                                self.populate_groups()
+                                popup.dismiss()
+                        except:
+                            self.status_label.text = "❌ Kayıt Hatası!"
+
+                    # 🚀 B: Bilgisayar Kapalıysa -> Daha önce tablete kaydettiği yuvadan okur
+                    def on_offline_mode(req, error_msg):
+                        if os.path.exists(safe_path):
+                            try:
+                                import shutil
+                                shutil.copy2(safe_path, aktif_yol)
+                                if self.core.parse_m3u(aktif_yol):
+                                    self.status_label.text = f"💾 Çevrimdışı Mod: {secilen_dosya} Hafızadan Yüklendi!"
+                                    self.populate_groups()
+                                    popup.dismiss()
+                            except:
+                                self.status_label.text = "❌ Çevrimdışı Liste Okuma Hatası!"
+                        else:
+                            self.status_label.text = "❌ Bilgisayar Kapalı ve Bu Liste Henüz Kaydedilmemiş!"
+
+                    # Wi-Fi üzerinden bilgisayarı yoklar
+                    UrlRequest(tam_yerel_url, on_success=on_success, on_failure=on_offline_mode, on_error=on_offline_mode, timeout=4)
                 except Exception as e:
-                    self.status_label.text = "❌ Yükleme Hatası!"
+                    self.status_label.text = "❌ İşlem Hatası!"
                     
             load_btn.bind(on_release=do_load)
             popup.open()
@@ -167,13 +223,13 @@ class CinemaIPTVAndroid(BoxLayout):
         for g_name in sorted(self.core.channels_by_group.keys()):
             btn = Button(text=g_name, size_hint_y=None, height=dp(38), background_color=(0.2, 0.2, 0.2, 1))
             btn.bind(on_release=lambda instance, name=g_name: self.load_channels(name))
-            self.group_layout.addWidget(btn)
+            self.group_layout.add_widget(btn)
 
     def load_channels(self, group_name):
         self.group_layout.clear_widgets()
         back_btn = Button(text="⬅ KATEGORİLERE DÖN", size_hint_y=None, height=dp(40), background_color=(0.8, 0.2, 0.2, 1))
         back_btn.bind(on_release=lambda inst: self.populate_groups())
-        self.group_layout.addWidget(back_btn)
+        self.group_layout.add_widget(back_btn)
 
         ch_list = self.core.channels_by_group.get(group_name, [])
         grouped_shows = self.core.group_shows(ch_list)
@@ -183,7 +239,7 @@ class CinemaIPTVAndroid(BoxLayout):
             if episodes:
                 first_ep_url = episodes["url"] if isinstance(episodes, list) else episodes.get("url", "")
                 btn.bind(on_release=lambda instance, url=first_ep_url, name=show_name: self.start_playback(url, name))
-            self.group_layout.addWidget(btn)
+            self.group_layout.add_widget(btn)
 
     def start_playback(self, url, name):
         if not self.video:
@@ -250,6 +306,46 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
