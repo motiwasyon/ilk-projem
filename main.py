@@ -119,25 +119,36 @@ class CinemaIPTVAndroid(BoxLayout):
             from kivy.app import App
             
             content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
-            safe_dir = App.get_running_app().user_data_dir
             
-            # Klasördeki tüm m3u dosyalarını otomatik tarar
-            m3u_files = [f for f in os.listdir(safe_dir) if f.endswith('.m3u')]
-            if not m3u_files:
-                m3u_files = ["playlist.m3u"]
+            # 📱 TABLETİN GENEL DOWNLOAD KLASÖRÜNÜ HEDEF ALIYORUZ
+            download_dir = "/storage/emulated/0/Download"
+            
+            # Eğer kod bilgisayarda test ediliyorsa veya klasör yoksa korumalı alanı seçer
+            if not os.path.exists(download_dir):
+                download_dir = App.get_running_app().user_data_dir
+            
+            # Klasördeki tüm m3u dosyalarını orijinal isimleriyle otomatik tarar
+            m3u_files = []
+            if os.path.exists(download_dir):
+                m3u_files = [f for f in os.listdir(download_dir) if f.endswith('.m3u')]
                 
-            # 🔄 Tıklayınca 10 listeyi de açan akıllı drop-down menü
-            self.file_spinner = Spinner(text=m3u_files, values=m3u_files, size_hint_y=0.40, background_color=(0.2, 0.2, 0.2, 1))
+            if not m3u_files:
+                m3u_files = ["Klasörde M3U Bulunamadı.m3u"]
+                
+            # 🔄 Download klasöründeki tüm orijinal M3U'ları listeleyen açılır menü
+            self.file_spinner = Spinner(text=m3u_files[0], values=m3u_files, size_hint_y=0.40, background_color=(0.2, 0.2, 0.2, 1))
             load_btn = Button(text="Seçilen Listeyi Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
             
-            content.add_widget(Label(text="İzlemek İstediğiniz IPTV Listesini Seçin:", size_hint_y=0.20))
+            content.add_widget(Label(text="Download Klasöründeki Listeler:", size_hint_y=0.20))
             content.add_widget(self.file_spinner)
             content.add_widget(load_btn)
-            popup = Popup(title='Çoklu IPTV Seçim Paneli', content=content, size_hint=(0.7, 0.4))
+            popup = Popup(title='Bulut / Download IPTV Paneli', content=content, size_hint=(0.7, 0.4))
             
             def do_load(inst):
                 try:
-                    if self.core.parse_m3u(self.file_spinner.text):
+                    # Seçilen dosyanın tam yolunu oluşturup parse işlemine gönderir
+                    tam_dosya_yolu = os.path.join(download_dir, self.file_spinner.text)
+                    if self.core.parse_m3u(tam_dosya_yolu):
                         self.status_label.text = f"✅ {self.file_spinner.text} Başarıyla Yüklendi!"
                         self.populate_groups()
                         popup.dismiss()
@@ -149,8 +160,7 @@ class CinemaIPTVAndroid(BoxLayout):
             load_btn.bind(on_release=do_load)
             popup.open()
         except Exception as e:
-            self.status_label.text = "❌ Panel Açma Hatası"
-
+            self.status_label.text = f"❌ Panel Hatası: {str(e)[:30]}"
 
     def populate_groups(self):
         self.group_layout.clear_widgets()
@@ -240,6 +250,16 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
+
+
+
+
+
+
+
+
 
 
 
