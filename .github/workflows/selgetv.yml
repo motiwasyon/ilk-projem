@@ -41,7 +41,7 @@ jobs:
         echo "package.domain = org.selgeproje" >> buildozer.spec
         echo "source.dir = ." >> buildozer.spec
         echo "source.include_exts = py,png,jpg,kv,atlas,json,m3u" >> buildozer.spec
-        echo "version = 1.7" >> buildozer.spec
+        echo "version = 1.8" >> buildozer.spec
         echo "orientation = landscape" >> buildozer.spec
         echo "requirements = python3,kivy==2.3.0,requests,urllib3,chardet,certifi,idna,ffpyplayer" >> buildozer.spec
         echo "fullscreen = 1" >> buildozer.spec
