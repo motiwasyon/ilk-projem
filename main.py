@@ -280,14 +280,16 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def start_playback(self, url, name):
         try:
-            self.status_label.text = f"⏳ {name} açılıyor, motor yükleniyor..."
-            
             if not self.video:
                 self.video_container.clear_widgets()
                 video_options = {
                     'eos': 'loop',
                     'buffering': 12000,
-                    'hw_decoder': False
+                    'hw_decoder': False,
+                    'options': {
+                        'framedrop': True,
+                        'sync': 'audio'
+                    }
                 }
                 self.video = Video(source='', state='stop', options=video_options, size_hint_y=1)
                 self.video_container.add_widget(self.video)
@@ -297,18 +299,8 @@ class CinemaIPTVAndroid(BoxLayout):
             self.video.state = 'play'
             self.play_btn.text = "⏸ Duraklat"
             self.status_label.text = f"📺 Oynatılıyor: {name}"
-            
-            def on_headers(request, headers):
-                sb = int(headers.get('content-length', 0))
-                if sb > 0:
-                    self.status_label.text = f"📺 Oynatılıyor: {name} | 📂 Boyut: {sb // (1024**2)} MB"
-            
-            UrlRequest(url, on_headers=on_headers, method='HEAD', req_headers={"User-Agent": "Mozilla"})
-        except Exception as video_error:
-            # 🚨 HATA ENJEKTE EDİLEN ALAN: Çökmeyi engeller ve hatanın adını ekrana basar
-            import traceback
-            hata_detayi = traceback.format_exc().split('\n')[-2]
-            self.status_label.text = f"🚨 OYNATMA HATASI: {str(hata_detayi)}"
+        except:
+            self.status_label.text = "❌ Oynatma Hatası!"
 
 
     def toggle_fullscreen_mode(self, instance=None):
