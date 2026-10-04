@@ -114,6 +114,24 @@ class CinemaIPTVAndroid(BoxLayout):
         except Exception as major_error:
             self.clear_widgets()
             self.add_widget(Label(text=f"🚨 Başlatma Hatası Yakalandı:\n{str(major_error)}"))
+ 
+   def on_stop(self):
+        # 🖼️ ANDROID KÜÇÜK EKRAN (PiP) MOTORU
+        # Tablet arka plana alındığında veya ev tuşuna basıldığında videoyu küçültür
+        try:
+            from jnius import autoclass
+            # Android işletim sisteminin yerel PictureInPicture parametrelerini çağırıyoruz
+            Activity = autoclass('org.kivy.android.PythonActivity').mActivity
+            AppOpsManager = autoclass('android.app.AppOpsManager')
+            
+            # Tabletin Android sürümünü kontrol eder (Android 8.0 ve üzeri için PiP aktiftir)
+            Build = autoclass('android.os.Build$VERSION')
+            if Build.SDK_INT >= 26:
+                # Uygulamayı kapatmak yerine sağ altta çerçevesiz mini saf videoya dönüştürür
+                Activity.enterPictureInPictureMode()
+        except:
+            pass
+
 
     def toggle_play(self, instance=None):
         if self.video and self.video.state == 'play':
@@ -135,29 +153,114 @@ class CinemaIPTVAndroid(BoxLayout):
         try:
             from kivy.uix.textinput import TextInput
             from kivy.uix.gridlayout import GridLayout
+            from kivy.uix.spinner import Spinner
+            from kivy.app import App
             
-            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
-            grid = GridLayout(cols=2, spacing=dp(8), size_hint_y=0.65)
+            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(6))
+            safe_dir = App.get_running_app().user_data_dir
             
-            grid.add_widget(Label(text="URL:", size_hint_x=0.25, font_size=dp(13)))
-            self.server_input = TextInput(hint_text="http://xtvglobal.xyz:2095", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            # 📂 HAFIZADAKİ 10 YUVAYI TARAMA
+            hafizadaki_listeler = []
+            if os.path.exists(safe_dir):
+                hafizadaki_listeler = [f.replace("slot_", "").replace(".m3u", "") for f in os.listdir(safe_dir) if f.startswith("slot_") and f.endswith(".m3u")]
+            if not hafizadaki_listeler:
+                hafizadaki_listeler = ["Kayıtlı Liste Bulunmuyor"]
+                
+            self.file_spinner = Spinner(text=hafizadaki_listeler[0], values=hafizadaki_listeler, size_hint_y=0.20, background_color=(0.2, 0.2, 0.2, 1))
+            content.add_widget(Label(text="📱 Kayıtlı Listeleriniz:", size_hint_y=0.05, font_size=dp(11)))
+            content.add_widget(self.file_spinner)
+            
+            grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.50)
+            grid.add_widget(Label(text="URL:", size_hint_x=0.20, font_size=dp(12)))
+            self.server_input = TextInput(hint_text="http://xtvglobal.xyz:2095", multiline=False, size_hint_x=0.80, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.server_input)
             
-            grid.add_widget(Label(text="User:", size_hint_x=0.25, font_size=dp(13)))
-            self.user_input = TextInput(hint_text="Kullanici Adi", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(Label(text="User:", size_hint_x=0.20, font_size=dp(12)))
+            self.user_input = TextInput(hint_text="Kullanici Adi", multiline=False, size_hint_x=0.80, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.user_input)
             
-            grid.add_widget(Label(text="Pass:", size_hint_x=0.25, font_size=dp(13)))
-            self.pass_input = TextInput(hint_text="Sifre", password=True, multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(Label(text="Pass:", size_hint_x=0.20, font_size=dp(12)))
+            self.pass_input = TextInput(hint_text="Sifre", password=False, multiline=False, size_hint_x=0.80, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.pass_input)
+            
+            grid.add_widget(Label(text="İsim:", size_hint_x=0.20, font_size=dp(12)))
+            self.name_input = TextInput(hint_text="Listeye Verilecek İsim (Örn: Spor)", multiline=False, size_hint_x=0.80, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(self.name_input)
             
             content.add_widget(grid)
             
-            download_btn = Button(text="Listeyi İndir ve Yükle", background_color=(0.17, 0.47, 0.89, 1), size_hint_y=0.35, font_size=dp(14))
-            content.add_widget(download_btn)
+            btn_row = BoxLayout(orientation='horizontal', spacing=dp(6), size_hint_y=0.25)
+            load_btn = Button(text="Hafızadan Aç", background_color=(0.4, 0.76, 0.23, 1))
+            download_btn = Button(text="Yeni İndir ve Kaydet", background_color=(0.17, 0.47, 0.89, 1))
+            btn_row.add_widget(load_btn)
+            btn_row.add_widget(download_btn)
+            content.add_widget(btn_row)
             
-            popup = Popup(title='🌐 SelgeTV Xtream Bağlantısı', content=content, size_hint=(0.85, 0.60))
-            
+            popup = Popup(title='🌐 10 Yuvalı Xtream Playlist Manager', content=content, size_hint=(0.85, 0.65))
+
+            def do_load_stored(inst):
+                secilen = self.file_spinner.text
+                if "Bulunmuyor" in secilen:
+                    self.status_label.text = "❌ Açılacak kayıtlı liste yok!"
+                    return
+                safe_path = os.path.join(safe_dir, f"slot_{secilen}.m3u")
+                aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
+                try:
+                    import shutil
+                    shutil.copy2(safe_path, aktif_yol)
+                    if self.core.parse_m3u(aktif_yol):
+                        self.status_label.text = f"💾 Çevrimdışı Mod: {secilen} Hafızadan Yüklendi!"
+                        self.populate_groups()
+                        popup.dismiss()
+                except:
+                    self.status_label.text = "❌ Hafızadan Okuma Hatası!"
+
+            def do_download(inst):
+                srv = self.server_input.text.strip()
+                usr = self.user_input.text.strip()
+                pas = self.pass_input.text.strip()
+                liste_ismi = self.name_input.text.strip()
+                
+                if not srv or not usr or not pas or not liste_ismi:
+                    self.status_label.text = "❌ Lütfen tüm alanları ve isim kutusunu doldurun!"
+                    return
+                    
+                liste_ismi = re.sub(r'[^\w\-_]', '', liste_ismi) # Güvenli dosya adı temizliği
+                if not srv.startswith("http"): srv = "http://" + srv
+                if srv.endswith('/'): srv = srv[:-1]
+                    
+                self.status_label.text = "🔄 Sunucuya bağlanılıyor, liste indiriliyor..."
+                full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
+                
+                def on_success(req, result):
+                    try:
+                        safe_path = os.path.join(safe_dir, f"slot_{liste_ismi}.m3u")
+                        aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
+                        
+                        with open(safe_path, "w", encoding="utf-8", errors="ignore") as f:
+                            f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
+                        with open(aktif_yol, "w", encoding="utf-8") as f:
+                            f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
+                        
+                        if self.core.parse_m3u(aktif_yol):
+                            self.status_label.text = f"✅ {liste_ismi} Başarıyla İndirildi ve Kaydedildi!"
+                            self.populate_groups()
+                            popup.dismiss()
+                        else:
+                            self.status_label.text = "❌ İndirilen liste çözümlenemedi!"
+                    except:
+                        self.status_label.text = "❌ Dosya Yazma Hatası!"
+
+                def on_failure(req, result): self.status_label.text = "❌ Sunucu bağlantısı başarısız!"
+                def on_error(req, error): self.status_label.text = "❌ Bağlantı hatası veya zaman aşımı!"
+                UrlRequest(full_url, on_success=on_success, on_failure=on_failure, on_error=on_error, timeout=25)
+                
+            load_btn.bind(on_release=do_load_stored)
+            download_btn.bind(on_release=do_download)
+            popup.open()
+        except Exception as e:
+            self.status_label.text = f"❌ Panel Hatası: {str(e)[:30]}"
+
             def do_download(inst):
                 srv = self.server_input.text.strip()
                 usr = self.user_input.text.strip()
@@ -279,21 +382,32 @@ class CinemaIPTVAndroid(BoxLayout):
             self.group_layout.add_widget(btn)
 
     def start_playback(self, url, name):
-        if not self.video:
-            self.status_label.text = "⚠️ Video Oynatıcı Aktif Değil."
-            return
-        self.video.unload()
-        self.video.source = url
-        self.video.state = 'play'
-        self.play_btn.text = "⏸ Duraklat"
-        self.status_label.text = f"📺 Oynatılıyor: {name}"
-        
-        def on_headers(request, headers):
-            sb = int(headers.get('content-length', 0))
-            if sb > 0:
-                self.status_label.text = f"📺 Oynatılıyor: {name} | 📂 Boyut: {sb // (1024**2)} MB"
-        
-        UrlRequest(url, on_headers=on_headers, method='HEAD', req_headers={"User-Agent": "Mozilla"})
+        try:
+            if not self.video:
+                self.video_container.clear_widgets()
+                video_options = {
+                    'eos': 'loop',
+                    'buffering': 8000,
+                    'hw_decoder': False
+                }
+                self.video = Video(source='', state='stop', options=video_options, size_hint_y=1)
+                self.video_container.add_widget(self.video)
+                
+            self.video.unload()
+            self.video.source = url
+            self.video.state = 'play'
+            self.play_btn.text = "⏸ Duraklat"
+            self.status_label.text = f"📺 Oynatılıyor: {name}"
+            
+            def on_headers(request, headers):
+                sb = int(headers.get('content-length', 0))
+                if sb > 0:
+                    self.status_label.text = f"📺 Oynatılıyor: {name} | 📂 Boyut: {sb // (1024**2)} MB"
+            
+            UrlRequest(url, on_headers=on_headers, method='HEAD', req_headers={"User-Agent": "Mozilla"})
+        except:
+            self.status_label.text = "❌ Oynatma Hatası!"
+
 
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
@@ -343,6 +457,81 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
