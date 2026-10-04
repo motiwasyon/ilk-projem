@@ -102,29 +102,12 @@ class CinemaIPTVAndroid(BoxLayout):
             aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
             if os.path.exists(aktif_yol):
                 if self.core.parse_m3u(aktif_yol):
-                    self.populate_groups()
+                    Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
                     self.status_label.text = "💾 IPTV Listesi Hafızadan Yüklendi."
         except Exception as major_error:
             self.clear_widgets()
             self.add_widget(Label(text=f"🚨 Başlatma Hatası Yakalandı:\n{str(major_error)}"))
 
-    def toggle_play(self, instance=None):
-        if self.video and self.video.state == 'play':
-            self.video.state = 'stop'
-            self.play_btn.text = "▶ Oynat"
-        elif self.video:
-            self.video.source = self.video.source
-            self.video.state = 'play'
-            self.play_btn.text = "⏸ Duraklat"
-
-    def update_hud(self, dt):
-        if self.video and self.video.duration > 0:
-            self.timeline.max = self.video.duration
-            self.timeline.value = self.video.position
-            self.time_curr.text = str(int(self.video.position))
-            self.time_total.text = str(int(self.video.duration))
-
-    # 🌐 10 YUVALI GELİŞMİŞ XTREAM PLAYLIST MANAGER
     def show_server_popup(self, instance):
         try:
             from kivy.uix.textinput import TextInput
@@ -149,7 +132,7 @@ class CinemaIPTVAndroid(BoxLayout):
             grid = GridLayout(cols=3, spacing=dp(6), size_hint_y=0.55)
             
             grid.add_widget(Label(text="URL:", size_hint_x=0.15, font_size=dp(12)))
-            self.server_input = TextInput(text="", multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            self.server_input = TextInput(text="", multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1), input_type='text', keyboard_suggestions=False)
             grid.add_widget(self.server_input)
             url_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
             url_paste.bind(on_release=lambda x: setattr(self.server_input, 'text', Clipboard.paste()))
@@ -199,8 +182,8 @@ class CinemaIPTVAndroid(BoxLayout):
                     shutil.copy2(safe_path, aktif_yol)
                     if self.core.parse_m3u(aktif_yol):
                         self.status_label.text = f"💾 Çevrimdışı Mod: {secilen} Hafızadan Yüklendi!"
-                        self.populate_groups()
                         popup.dismiss()
+                        Clock.schedule_once(lambda dt: self.populate_groups(), 0.2)
                 except:
                     self.status_label.text = "❌ Hafızadan Okuma Hatası!"
 
@@ -233,8 +216,8 @@ class CinemaIPTVAndroid(BoxLayout):
                         
                         if self.core.parse_m3u(aktif_yol):
                             self.status_label.text = f"✅ {liste_ismi} Başarıyla İndirildi!"
-                            self.populate_groups()
                             popup.dismiss()
+                            Clock.schedule_once(lambda dt: self.populate_groups(), 0.2)
                         else:
                             self.status_label.text = "❌ İndirilen liste çözümlenemedi!"
                     except:
@@ -399,6 +382,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
