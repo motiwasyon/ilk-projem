@@ -140,7 +140,7 @@ class CinemaIPTVAndroid(BoxLayout):
             grid = GridLayout(cols=2, spacing=dp(8), size_hint_y=0.65)
             
             grid.add_widget(Label(text="URL:", size_hint_x=0.25, font_size=dp(13)))
-            self.server_input = TextInput(text="http://xtvglobal.xyz:2095", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            self.server_input = TextInput(hint_text="http://xtvglobal.xyz:2095", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.server_input)
             
             grid.add_widget(Label(text="User:", size_hint_x=0.25, font_size=dp(13)))
