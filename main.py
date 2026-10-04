@@ -95,7 +95,15 @@ class CinemaIPTVAndroid(BoxLayout):
 
 
             Clock.schedule_interval(self.update_hud, 1.0)
-        
+            # 💾 AKILLI AÇILIŞ HAFIZASI: Çevrimdışı modda en son yüklenen listeyi hatırlar
+            safe_dir = App.get_running_app().user_data_dir
+            aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
+            if os.path.exists(aktif_yol):
+                if self.core.parse_m3u(aktif_yol):
+                    self.populate_groups()
+                    self.status_label.text = "💾 IPTV Listesi Hafızadan Yüklendi."
+
+
             # 💾 OTOMATİK HAFIZA AÇILIŞI: En son yüklenen listeyi otomatik hatırlar
             safe_dir = App.get_running_app().user_data_dir
             son_liste_yolu = os.path.join(safe_dir, "aktif_yerel_liste.m3u")
@@ -125,102 +133,78 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def show_server_popup(self, instance):
         try:
-            from kivy.uix.spinner import Spinner
-            from kivy.app import App
+            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(8))
             
-            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
-            safe_dir = App.get_running_app().user_data_dir
+            # Form Düzeni (Grid)
+            grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.70)
             
-            # 🖥️ BİLGİSAYARINIZIN SABİT IP ADRESİ
-            # Kendi bilgisayarınızın IP'sini öğrendiğinizde buradaki "192.168.1.50" yazısını güncelleyin!
-            bilgisayar_ip = "192.168.1.208" 
-            yerel_sunucu_url = f"http://{bilgisayar_ip}:8080"
+            grid.add_widget(Label(text="URL:", size_hint_x=0.25, font_size=dp(12)))
+            self.server_input = TextInput(text="http://xtvglobal.xyz:2095", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(self.server_input)
             
-            # 📂 10 LİSTE HAFIZA YUVASI: Tablette kayıtlı duran 10 yuvayı tarar
-            hafizadaki_listeler = []
-            if os.path.exists(safe_dir):
-                hafizadaki_listeler = [f for f in os.listdir(safe_dir) if f.startswith("slot_") and f.endswith(".m3u")]
+            grid.add_widget(Label(text="User:", size_hint_x=0.25, font_size=dp(12)))
+            self.user_input = TextInput(hint_text="Kullanici Adi", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(self.user_input)
             
-            # Kullanıcıya gösterilecek temiz isimleri ayıklar (Örn: slot_spor.m3u -> spor.m3u)
-            gosterim_isimleri = [f.replace("slot_", "") for f in hafizadaki_listeler]
+            grid.add_widget(Label(text="Pass:", size_hint_x=0.25, font_size=dp(12)))
+            self.pass_input = TextInput(hint_text="Sifre", password=True, multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(self.pass_input)
             
-            if not gosterim_isimleri:
-                gosterim_isimleri = ["liste1.m3u", "liste2.m3u", "liste3.m3u", "liste4.m3u", "liste5.m3u", "liste6.m3u", "liste7.m3u", "liste8.m3u", "liste9.m3u", "liste10.m3u"]
+            content.add_widget(grid)
+            
+            # Listeyi İndir Butonu
+            download_btn = Button(text="Listeyi İndir", background_color=(0.17, 0.47, 0.89, 1), size_hint_y=0.30, font_weight="bold")
+            content.add_widget(download_btn)
+            
+            popup = Popup(title='🌐 Xtream Sunucu Girişi', content=content, size_hint=(0.85, 0.55))
+            
+            def do_download(inst):
+                srv = self.server_input.text.strip()
+                usr = self.user_input.text.strip()
+                pas = self.pass_input.text.strip()
                 
-            self.file_spinner = Spinner(text=gosterim_isimleri, values=gosterim_isimleri, size_hint_y=0.40, background_color=(0.2, 0.2, 0.2, 1))
-            load_btn = Button(text="Yerel Ağdan Güncelle ve Yükle", background_color=(0.4, 0.76, 0.23, 1), size_hint_y=0.40)
-            
-            content.add_widget(Label(text="İzlemek/İndirmek İstediğiniz Listeyi Seçin:", size_hint_y=0.20))
-            content.add_widget(self.file_spinner)
-            content.add_widget(load_btn)
-            popup = Popup(title='🏠 10 Yuvalı Yerel Wi-Fi Kontrolü', content=content, size_hint=(0.8, 0.4))
-            
-            # 🔍 AKILLI TARAYICI: Spinner tip uyuşmazlığı düzeltilmiş hatasız fonksiyon
-                        # 🔍 AKILLI TARAYICI: Kivy'nin liste kabul etmeyen hatasını kesin olarak kıran String zorlaması
-            def klasor_tara_success(req, html_result):
-                try:
-                    bulunan_dosyalar = re.findall(r'href="([^"]+\.m3u)"', html_result)
-                    if bulunan_dosyalar:
-                        temiz_list = sorted(list(set(bulunan_dosyalar)))
-                        self.file_spinner.values = temiz_list
-                        # [0] indeksini alıp zorla str() içine koyarak Kivy'nin hata fırlatmasını %100 engelliyoruz:
-                        self.file_spinner.text = str(temiz_list[0])
-                except:
-                    pass
-
-
-            UrlRequest(yerel_sunucu_url, on_success=klasor_tara_success, timeout=3)
-            
-            def do_load(inst):
-                try:
-                    secilen_dosya = self.file_spinner.text
-                    tam_yerel_url = f"{yerel_sunucu_url}/{secilen_dosya}"
+                if not srv or not usr or not pas:
+                    self.status_label.text = "❌ Eksik bilgi girdiniz!"
+                    return
+                
+                if not srv.startswith("http"):
+                    srv = "http://" + srv
+                if srv.endswith('/'):
+                    srv = srv[:-1]
                     
-                    # Tabletin kendi içindeki kalıcı yuva adı
-                    safe_path = os.path.join(safe_dir, f"slot_{secilen_dosya}")
-                    aktif_yol = os.path.join(safe_dir, "aktif_yerel_liste.m3u")
-                    
-                    # 🚀 A: Bilgisayar Açıksa -> Bilgisayardan indirip kaydeder
-                    def on_success(req, result):
-                        try:
-                            with open(safe_path, "w", encoding="utf-8", errors="ignore") as f:
-                                f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
-                            
-                            # Aktif çalma listesi olarak kopyala
-                            with open(aktif_yol, "w", encoding="utf-8") as f:
-                                f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
-                                
-                            if self.core.parse_m3u(aktif_yol):
-                                self.status_label.text = f"✅ {secilen_dosya} Bilgisayardan İndirildi ve Kaydedildi!"
-                                self.populate_groups()
-                                popup.dismiss()
-                        except:
-                            self.status_label.text = "❌ Kayıt Hatası!"
-
-                    # 🚀 B: Bilgisayar Kapalıysa -> Daha önce tablete kaydettiği yuvadan okur
-                    def on_offline_mode(req, error_msg):
-                        if os.path.exists(safe_path):
-                            try:
-                                import shutil
-                                shutil.copy2(safe_path, aktif_yol)
-                                if self.core.parse_m3u(aktif_yol):
-                                    self.status_label.text = f"💾 Çevrimdışı Mod: {secilen_dosya} Hafızadan Yüklendi!"
-                                    self.populate_groups()
-                                    popup.dismiss()
-                            except:
-                                self.status_label.text = "❌ Çevrimdışı Liste Okuma Hatası!"
+                self.status_label.text = "🔄 Sunucuya bağlanılıyor, liste indiriliyor..."
+                full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
+                
+                def on_success(req, result):
+                    try:
+                        from kivy.app import App
+                        safe_dir = App.get_running_app().user_data_dir
+                        safe_path = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
+                        
+                        with open(safe_path, "w", encoding="utf-8", errors="ignore") as f:
+                            f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
+                        
+                        if self.core.parse_m3u(safe_path):
+                            self.status_label.text = "✅ Liste Başarıyla Yüklendi!"
+                            self.populate_groups()
+                            popup.dismiss()
                         else:
-                            self.status_label.text = "❌ Bilgisayar Kapalı ve Bu Liste Henüz Kaydedilmemiş!"
+                            self.status_label.text = "❌ İndirilen liste çözümlenemedi!"
+                    except Exception as err:
+                        self.status_label.text = "❌ Dosya Yazma Hatası!"
 
-                    # Wi-Fi üzerinden bilgisayarı yoklar
-                    UrlRequest(tam_yerel_url, on_success=on_success, on_failure=on_offline_mode, on_error=on_offline_mode, timeout=4)
-                except Exception as e:
-                    self.status_label.text = "❌ İşlem Hatası!"
-                    
-            load_btn.bind(on_release=do_load)
+                def on_failure(req, result):
+                    self.status_label.text = "❌ Bağlantı Başarısız (404/500)"
+
+                def on_error(req, error):
+                    self.status_label.text = "❌ Bağlantı Hatası veya Zaman Aşımı!"
+
+                UrlRequest(full_url, on_success=on_success, on_failure=on_failure, on_error=on_error, timeout=25)
+                
+            download_btn.bind(on_release=do_download)
             popup.open()
         except Exception as e:
-            self.status_label.text = f"❌ Panel Hatası: {str(e)[:30]}"
+            self.status_label.text = "❌ Panel Açma Hatası!"
 
     def populate_groups(self):
         self.group_layout.clear_widgets()
@@ -310,6 +294,27 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
