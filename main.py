@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -33,7 +34,6 @@ class CinemaIPTVAndroid(BoxLayout):
             Window.bind(on_key_down=self.on_key_down)
             Window.bind(on_motion=self.on_mouse_motion)
 
-            # 📺 SOL PANEL
             self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
             self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
             self.server_btn.bind(on_release=self.show_server_popup)
@@ -51,18 +51,15 @@ class CinemaIPTVAndroid(BoxLayout):
             self.left_panel.add_widget(self.scroll_groups)
             self.add_widget(self.left_panel)
 
-            # 📺 ORTA PANEL
             self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.70, 1), padding=dp(8), spacing=dp(4))
             self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
             self.center_panel.add_widget(self.status_label)
 
-            # 📺 VİDEO ALANI
             self.video = None
             self.video_container = BoxLayout(size_hint_y=0.80)
             self.video_container.add_widget(Label(text="🍿 Yayın İzlemek İçin Kanal Seçiniz", font_size=dp(14)))
             self.center_panel.add_widget(self.video_container)
 
-            # 📺 HUD KUMANDA PANELİ
             self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
             self.hud_time_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.40)
             self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
@@ -78,17 +75,11 @@ class CinemaIPTVAndroid(BoxLayout):
             self.play_btn.bind(on_release=self.toggle_play)
             self.ss_btn = Button(text="📸 Ekran Al", background_color=(0.4, 0.76, 0.23, 1))
             self.ss_btn.bind(on_release=self.take_screenshot)
-            
-            # 🎬 YENİ: Ses ve Altyazı Ayarları Butonu (Tablete Özel)
-            self.media_settings_btn = Button(text="🎬 Ses / Altyazı", background_color=(0.9, 0.5, 0.1, 1))
-            self.media_settings_btn.bind(on_release=self.open_media_settings_popup)
-            
             self.fs_btn = Button(text="📺 Tam Ekran")
             self.fs_btn.bind(on_release=self.toggle_fullscreen_mode)
             
             self.hud_ctrl_row.add_widget(self.play_btn)
             self.hud_ctrl_row.add_widget(self.ss_btn)
-            self.hud_ctrl_row.add_widget(self.media_settings_btn)
             self.hud_ctrl_row.add_widget(self.fs_btn)
             self.hud_panel.add_widget(self.hud_ctrl_row)
 
@@ -97,7 +88,6 @@ class CinemaIPTVAndroid(BoxLayout):
 
             Clock.schedule_interval(self.update_hud, 1.0)
             
-            # 💾 HAFIZA AÇILIŞI
             safe_dir = App.get_running_app().user_data_dir
             aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
             if os.path.exists(aktif_yol):
@@ -107,6 +97,22 @@ class CinemaIPTVAndroid(BoxLayout):
         except Exception as major_error:
             self.clear_widgets()
             self.add_widget(Label(text=f"🚨 Başlatma Hatası Yakalandı:\n{str(major_error)}"))
+
+    def toggle_play(self, instance=None):
+        if self.video and self.video.state == 'play':
+            self.video.state = 'stop'
+            self.play_btn.text = "▶ Oynat"
+        elif self.video:
+            self.video.source = self.video.source
+            self.video.state = 'play'
+            self.play_btn.text = "⏸ Duraklat"
+
+    def update_hud(self, dt):
+        if self.video and self.video.duration > 0:
+            self.timeline.max = self.video.duration
+            self.timeline.value = self.video.position
+            self.time_curr.text = str(int(self.video.position))
+            self.time_total.text = str(int(self.video.duration))
 
     def show_server_popup(self, instance):
         try:
@@ -125,7 +131,7 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Kayıtlı Liste Bulunmuyor"]
                 
-            self.file_spinner = Spinner(text=hafizadaki_listeler[0], values=hafizadaki_listeler, size_hint_y=0.15, background_color=(0.2, 0.2, 0.2, 1))
+            self.file_spinner = Spinner(text=hafizadaki_listeler, values=hafizadaki_listeler, size_hint_y=0.15, background_color=(0.2, 0.2, 0.2, 1))
             content.add_widget(Label(text="📱 Kayıtlı Listeleriniz:", size_hint_y=0.05, font_size=dp(11)))
             content.add_widget(self.file_spinner)
             
@@ -233,7 +239,6 @@ class CinemaIPTVAndroid(BoxLayout):
         except Exception as e:
             self.status_label.text = f"❌ Panel Hatası: {str(e)[:30]}"
 
-
     def populate_groups(self):
         self.group_layout.clear_widgets()
         for g_name in sorted(self.core.channels_by_group.keys()):
@@ -328,42 +333,6 @@ class CinemaIPTVAndroid(BoxLayout):
             self.status_label.text = "📸 Ekran Güvenli Alana Kaydedildi!"
         except Exception as e:
             self.status_label.text = "❌ Ekran Alınamadı (İzin Hatası)"
-
-    def open_media_settings_popup(self, instance=None):
-        try:
-            if not self.video:
-                return
-                
-            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
-            
-            content.add_widget(Label(text="🔊 Ses Dili Seçimi", font_size=dp(14), size_hint_y=0.15))
-            vol_grid = GridLayout(cols=1, spacing=dp(6), size_hint_y=0.35)
-            
-            track_btn = Button(text="Alternatif Sese Geç (A)", background_color=(0.17, 0.47, 0.89, 1))
-            def cycle_audio(inst):
-                self.on_key_down(None, 97, None, 'a', None)
-                self.status_label.text = "🔄 Ses Kanalı Değiştirildi."
-            track_btn.bind(on_release=cycle_audio)
-            vol_grid.add_widget(track_btn)
-            content.add_widget(vol_grid)
-            
-            content.add_widget(Label(text="📝 Altyazı Seçimi", font_size=dp(14), size_hint_y=0.15))
-            sub_grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.35)
-            
-            sub_on_btn = Button(text="Altyazıyı Aç / Değiştir", background_color=(0.4, 0.76, 0.23, 1))
-            sub_off_btn = Button(text="❌ Altyazıyı Kapat", background_color=(0.8, 0.2, 0.2, 1))
-            
-            sub_grid.add_widget(sub_on_btn)
-            sub_grid.add_widget(sub_off_btn)
-            content.add_widget(sub_grid)
-            
-            popup = Popup(title='🎬 Yayın Ses ve Altyazı Ayarları', content=content, size_hint=(0.80, 0.50))
-            sub_on_btn.bind(on_release=lambda x: popup.dismiss())
-            sub_off_btn.bind(on_release=lambda x: popup.dismiss())
-            popup.open()
-        except:
-            self.status_label.text = "❌ Medya Ayarları Açma Hatası!"
-
 
 class CinemaIPTVApp(App):
     def build(self):
