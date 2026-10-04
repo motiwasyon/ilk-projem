@@ -131,6 +131,7 @@ class CinemaIPTVAndroid(BoxLayout):
             from kivy.uix.gridlayout import GridLayout
             from kivy.uix.spinner import Spinner
             from kivy.app import App
+            from kivy.core.clipboard import Clipboard
             
             content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(6))
             safe_dir = App.get_running_app().user_data_dir
@@ -141,26 +142,39 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Kayıtlı Liste Bulunmuyor"]
                 
-            self.file_spinner = Spinner(text=hafizadaki_listeler[0], values=hafizadaki_listeler, size_hint_y=0.20, background_color=(0.2, 0.2, 0.2, 1))
+            self.file_spinner = Spinner(text=hafizadaki_listeler[0], values=hafizadaki_listeler, size_hint_y=0.15, background_color=(0.2, 0.2, 0.2, 1))
             content.add_widget(Label(text="📱 Kayıtlı Listeleriniz:", size_hint_y=0.05, font_size=dp(11)))
             content.add_widget(self.file_spinner)
             
-            grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.50)
-            grid.add_widget(Label(text="URL:", size_hint_x=0.20, font_size=dp(12)))
-            self.server_input = TextInput(hint_text="http://xtvglobal.xyz:2095", multiline=False, size_hint_x=0.80, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid = GridLayout(cols=3, spacing=dp(6), size_hint_y=0.55)
+            
+            grid.add_widget(Label(text="URL:", size_hint_x=0.15, font_size=dp(12)))
+            self.server_input = TextInput(text="", multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.server_input)
+            url_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
+            url_paste.bind(on_release=lambda x: setattr(self.server_input, 'text', Clipboard.paste()))
+            grid.add_widget(url_paste)
             
-            grid.add_widget(Label(text="User:", size_hint_x=0.20, font_size=dp(12)))
-            self.user_input = TextInput(hint_text="Kullanici Adi", multiline=False, size_hint_x=0.80, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(Label(text="User:", size_hint_x=0.15, font_size=dp(12)))
+            self.user_input = TextInput(hint_text="Kullanici Adi", multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.user_input)
+            user_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
+            user_paste.bind(on_release=lambda x: setattr(self.user_input, 'text', Clipboard.paste()))
+            grid.add_widget(user_paste)
             
-            grid.add_widget(Label(text="Pass:", size_hint_x=0.20, font_size=dp(12)))
-            self.pass_input = TextInput(hint_text="Sifre", password=False, multiline=False, size_hint_x=0.80, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(Label(text="Pass:", size_hint_x=0.15, font_size=dp(12)))
+            self.pass_input = TextInput(hint_text="Sifre", password=False, multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.pass_input)
+            pass_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
+            pass_paste.bind(on_release=lambda x: setattr(self.pass_input, 'text', Clipboard.paste()))
+            grid.add_widget(pass_paste)
             
-            grid.add_widget(Label(text="İsim:", size_hint_x=0.20, font_size=dp(12)))
-            self.name_input = TextInput(hint_text="Listeye Verilecek İsim (Örn: Spor)", multiline=False, size_hint_x=0.80, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
+            grid.add_widget(Label(text="İsim:", size_hint_x=0.15, font_size=dp(12)))
+            self.name_input = TextInput(hint_text="Liste İsmi (Örn: Spor)", multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.name_input)
+            name_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
+            name_paste.bind(on_release=lambda x: setattr(self.name_input, 'text', Clipboard.paste()))
+            grid.add_widget(name_paste)
             
             content.add_widget(grid)
             
@@ -172,7 +186,6 @@ class CinemaIPTVAndroid(BoxLayout):
             content.add_widget(btn_row)
             
             popup = Popup(title='🌐 10 Yuvalı Xtream Playlist Manager', content=content, size_hint=(0.85, 0.65))
-
             
             def do_load_stored(inst):
                 secilen = self.file_spinner.text
