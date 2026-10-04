@@ -131,7 +131,9 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Kayıtlı Liste Bulunmuyor"]
                 
-            self.file_spinner = Spinner(text=hafizadaki_listeler, values=hafizadaki_listeler, size_hint_y=0.15, background_color=(0.2, 0.2, 0.2, 1))
+            # ✅ YENİ DÜZELTİLMİŞ SATIR: [0] indeks eki sayesinde Spinner artık sadece saf metin (str) okur ve asla çökmez
+            self.file_spinner = Spinner(text=hafizadaki_listeler[0], values=hafizadaki_listeler, size_hint_y=0.15, background_color=(0.2, 0.2, 0.2, 1))
+
             content.add_widget(Label(text="📱 Kayıtlı Listeleriniz:", size_hint_y=0.05, font_size=dp(11)))
             content.add_widget(self.file_spinner)
             
@@ -351,6 +353,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
