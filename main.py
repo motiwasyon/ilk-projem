@@ -280,8 +280,12 @@ class CinemaIPTVAndroid(BoxLayout):
                 self.video_container.clear_widgets()
                 video_options = {
                     'eos': 'loop',
-                    'buffering': 8000,
-                    'hw_decoder': False
+                    'buffering': 12000,
+                    'hw_decoder': False,
+                    'options': {
+                        'framedrop': True,
+                        'sync': 'audio'
+                    }
                 }
                 self.video = Video(source='', state='stop', options=video_options, size_hint_y=1)
                 self.video_container.add_widget(self.video)
@@ -395,6 +399,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
