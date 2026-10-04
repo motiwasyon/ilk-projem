@@ -1,5 +1,4 @@
 
-
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -251,30 +250,33 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def load_channels(self, group_name):
         try:
-            # 📺 Sağ taraftaki kanal/içerik listesini temizleyip sıfırdan pürüzsüzce kuruyoruz
             self.group_layout.clear_widgets()
             
-            # Üste şık bir geri dönüş butonu koyuyoruz
             back_btn = Button(text="⬅ KATEGORİLERE DÖN", size_hint_y=None, height=dp(42), background_color=(0.8, 0.2, 0.2, 1))
             back_btn.bind(on_release=lambda inst: self.populate_groups())
             self.group_layout.add_widget(back_btn)
 
-            # Tıklanan kategorinin içindeki tüm kanalları çekiyoruz
             ch_list = self.core.channels_by_group.get(group_name, [])
             grouped_shows = self.core.group_shows(ch_list)
 
-            # Kanalları sağ taraftaki listeye alt alta sıralı butonlar halinde basıyoruz
             for show_name, episodes in grouped_shows.items():
-                btn = Button(text=f"📺 {show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
+                btn = Button(text=f"🎬 {show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
                 if episodes:
-                    first_ep_url = episodes["url"] if isinstance(episodes, list) else episodes.get("url", "")
-                    # Kanala tıklandığında artık çökmeden direkt oynatma fonksiyonuna paslayacak
-                    btn.bind(on_release=lambda instance, url=first_ep_url, name=show_name: self.start_playback(url, name))
+                    # 🧬 AKILLI TİP DEDEKTÖRÜ: Gelen verinin list mi dict mi olduğunu otomatik çözer ve asla hata vermez
+                    if isinstance(episodes, list) and len(episodes) > 0:
+                        first_ep_url = episodes[0].get("url", "") if isinstance(episodes[0], dict) else ""
+                    elif isinstance(episodes, dict):
+                        first_ep_url = episodes.get("url", "")
+                    else:
+                        first_ep_url = ""
+                        
+                    if first_ep_url:
+                        btn.bind(on_release=lambda instance, url=first_ep_url, name=show_name: self.start_playback(url, name))
                 self.group_layout.add_widget(btn)
                 
             self.status_label.text = f"📂 {group_name} kategorisi yüklendi."
         except Exception as e:
-            self.status_label.text = f"🚨 Sağ Liste Hatası: {str(e)[:20]}"
+            self.status_label.text = f"🚨 Sağ Liste Hatası: {str(e)[:25]}"
 
     def start_playback(self, url, name):
         try:
@@ -367,7 +369,6 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
-
 
 
 
