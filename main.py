@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import re  # re kütüphanesini üste aldık
+import re
 from datetime import datetime
 
-# 🔑 Önce Kivy çekirdeğini ayağa kaldırıyoruz
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -20,9 +19,7 @@ from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
 from kivy.metrics import dp 
 
-# 📦 Birinci parçayı içeri aktarıyoruz (Çift olan satır teke düşürüldü)
 from iptv_core import IPTVCoreLogic
-
 
 class CinemaIPTVAndroid(BoxLayout):
     def __init__(self, **kwargs):
@@ -59,13 +56,13 @@ class CinemaIPTVAndroid(BoxLayout):
             self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
             self.center_panel.add_widget(self.status_label)
 
-            # 📺 SİYAH EKRAN KORUMASI: Başlangıçta boş video motoru yüklenmesini engelliyoruz
+            # 📺 VİDEO ALANI
             self.video = None
             self.video_container = BoxLayout(size_hint_y=0.80)
             self.video_container.add_widget(Label(text="🍿 Yayın İzlemek İçin Kanal Seçiniz", font_size=dp(14)))
             self.center_panel.add_widget(self.video_container)
 
-            # 📺 ŞEFFAF HUD KUMANDA PANELİ
+            # 📺 HUD KUMANDA PANELİ
             self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
             self.hud_time_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.40)
             self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
@@ -90,48 +87,20 @@ class CinemaIPTVAndroid(BoxLayout):
             self.hud_panel.add_widget(self.hud_ctrl_row)
 
             self.center_panel.add_widget(self.hud_panel)
-            # Düzen sabitlemesi (Mükerrer left_panel eklemesi kaldırıldı)
             self.add_widget(self.center_panel)
 
-
             Clock.schedule_interval(self.update_hud, 1.0)
-            # 💾 AKILLI AÇILIŞ HAFIZASI: Çevrimdışı modda en son yüklenen listeyi hatırlar
+            
+            # 💾 HAFIZA AÇILIŞI
             safe_dir = App.get_running_app().user_data_dir
             aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
             if os.path.exists(aktif_yol):
                 if self.core.parse_m3u(aktif_yol):
                     self.populate_groups()
                     self.status_label.text = "💾 IPTV Listesi Hafızadan Yüklendi."
-
-
-            # 💾 OTOMATİK HAFIZA AÇILIŞI: En son yüklenen listeyi otomatik hatırlar
-            safe_dir = App.get_running_app().user_data_dir
-            son_liste_yolu = os.path.join(safe_dir, "aktif_yerel_liste.m3u")
-            if os.path.exists(son_liste_yolu):
-                if self.core.parse_m3u(son_liste_yolu):
-                    self.populate_groups()
-                    self.status_label.text = "💾 Kayıtlı IPTV Listesi Hafızadan Yüklendi."  
         except Exception as major_error:
             self.clear_widgets()
             self.add_widget(Label(text=f"🚨 Başlatma Hatası Yakalandı:\n{str(major_error)}"))
- 
-   def on_stop(self):
-        # 🖼️ ANDROID KÜÇÜK EKRAN (PiP) MOTORU
-        # Tablet arka plana alındığında veya ev tuşuna basıldığında videoyu küçültür
-        try:
-            from jnius import autoclass
-            # Android işletim sisteminin yerel PictureInPicture parametrelerini çağırıyoruz
-            Activity = autoclass('org.kivy.android.PythonActivity').mActivity
-            AppOpsManager = autoclass('android.app.AppOpsManager')
-            
-            # Tabletin Android sürümünü kontrol eder (Android 8.0 ve üzeri için PiP aktiftir)
-            Build = autoclass('android.os.Build$VERSION')
-            if Build.SDK_INT >= 26:
-                # Uygulamayı kapatmak yerine sağ altta çerçevesiz mini saf videoya dönüştürür
-                Activity.enterPictureInPictureMode()
-        except:
-            pass
-
 
     def toggle_play(self, instance=None):
         if self.video and self.video.state == 'play':
@@ -149,6 +118,7 @@ class CinemaIPTVAndroid(BoxLayout):
             self.time_curr.text = str(int(self.video.position))
             self.time_total.text = str(int(self.video.duration))
 
+    # 🌐 10 YUVALI GELİŞMİŞ XTREAM PLAYLIST MANAGER
     def show_server_popup(self, instance):
         try:
             from kivy.uix.textinput import TextInput
@@ -159,7 +129,6 @@ class CinemaIPTVAndroid(BoxLayout):
             content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(6))
             safe_dir = App.get_running_app().user_data_dir
             
-            # 📂 HAFIZADAKİ 10 YUVAYI TARAMA
             hafizadaki_listeler = []
             if os.path.exists(safe_dir):
                 hafizadaki_listeler = [f.replace("slot_", "").replace(".m3u", "") for f in os.listdir(safe_dir) if f.startswith("slot_") and f.endswith(".m3u")]
@@ -198,6 +167,7 @@ class CinemaIPTVAndroid(BoxLayout):
             
             popup = Popup(title='🌐 10 Yuvalı Xtream Playlist Manager', content=content, size_hint=(0.85, 0.65))
 
+            
             def do_load_stored(inst):
                 secilen = self.file_spinner.text
                 if "Bulunmuyor" in secilen:
@@ -222,10 +192,10 @@ class CinemaIPTVAndroid(BoxLayout):
                 liste_ismi = self.name_input.text.strip()
                 
                 if not srv or not usr or not pas or not liste_ismi:
-                    self.status_label.text = "❌ Lütfen tüm alanları ve isim kutusunu doldurun!"
+                    self.status_label.text = "❌ Lütfen tüm alanları doldurun!"
                     return
                     
-                liste_ismi = re.sub(r'[^\w\-_]', '', liste_ismi) # Güvenli dosya adı temizliği
+                liste_ismi = re.sub(r'[^\w\-_]', '', liste_ismi)
                 if not srv.startswith("http"): srv = "http://" + srv
                 if srv.endswith('/'): srv = srv[:-1]
                     
@@ -243,7 +213,7 @@ class CinemaIPTVAndroid(BoxLayout):
                             f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
                         
                         if self.core.parse_m3u(aktif_yol):
-                            self.status_label.text = f"✅ {liste_ismi} Başarıyla İndirildi ve Kaydedildi!"
+                            self.status_label.text = f"✅ {liste_ismi} Başarıyla İndirildi!"
                             self.populate_groups()
                             popup.dismiss()
                         else:
@@ -261,102 +231,6 @@ class CinemaIPTVAndroid(BoxLayout):
         except Exception as e:
             self.status_label.text = f"❌ Panel Hatası: {str(e)[:30]}"
 
-            def do_download(inst):
-                srv = self.server_input.text.strip()
-                usr = self.user_input.text.strip()
-                pas = self.pass_input.text.strip()
-                
-                if not srv or not usr or not pas:
-                    self.status_label.text = "❌ Lütfen tüm alanları doldurun!"
-                    return
-                
-                if not srv.startswith("http"):
-                    srv = "http://" + srv
-                if srv.endswith('/'):
-                    srv = srv[:-1]
-                    
-                self.status_label.text = "🔄 Sunucuya bağlanılıyor, liste indiriliyor..."
-                full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
-                
-                def on_success(req, result):
-                    try:
-                        from kivy.app import App
-                        safe_dir = App.get_running_app().user_data_dir
-                        safe_path = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
-                        
-                        with open(safe_path, "w", encoding="utf-8", errors="ignore") as f:
-                            f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
-                        
-                        if self.core.parse_m3u(safe_path):
-                            self.status_label.text = "✅ Liste Başarıyla Yüklendi!"
-                            self.populate_groups()
-                            popup.dismiss()
-                        else:
-                            self.status_label.text = "❌ İndirilen liste çözümlenemedi!"
-                    except:
-                        self.status_label.text = "❌ Dosya Yazma Hatası!"
-
-                def on_failure(req, result):
-                    self.status_label.text = "❌ Sunucu bağlantısı başarısız!"
-
-                def on_error(req, error):
-                    self.status_label.text = "❌ Bağlantı hatası veya zaman aşımı!"
-
-                UrlRequest(full_url, on_success=on_success, on_failure=on_failure, on_error=on_error, timeout=25)
-                
-            download_btn.bind(on_release=do_download)
-            popup.open()
-        except Exception as e:
-            self.status_label.text = f"❌ Form Hatası: {str(e)[:30]}"
-
-         
-            def do_download(inst):
-                srv = self.server_input.text.strip()
-                usr = self.user_input.text.strip()
-                pas = self.pass_input.text.strip()
-                
-                if not srv or not usr or not pas:
-                    self.status_label.text = "❌ Eksik bilgi girdiniz!"
-                    return
-                
-                if not srv.startswith("http"):
-                    srv = "http://" + srv
-                if srv.endswith('/'):
-                    srv = srv[:-1]
-                    
-                self.status_label.text = "🔄 Sunucuya bağlanılıyor, liste indiriliyor..."
-                full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
-                
-                def on_success(req, result):
-                    try:
-                        from kivy.app import App
-                        safe_dir = App.get_running_app().user_data_dir
-                        safe_path = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
-                        
-                        with open(safe_path, "w", encoding="utf-8", errors="ignore") as f:
-                            f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
-                        
-                        if self.core.parse_m3u(safe_path):
-                            self.status_label.text = "✅ Liste Başarıyla Yüklendi!"
-                            self.populate_groups()
-                            popup.dismiss()
-                        else:
-                            self.status_label.text = "❌ İndirilen liste çözümlenemedi!"
-                    except Exception as err:
-                        self.status_label.text = "❌ Dosya Yazma Hatası!"
-
-                def on_failure(req, result):
-                    self.status_label.text = "❌ Bağlantı Başarısız (404/500)"
-
-                def on_error(req, error):
-                    self.status_label.text = "❌ Bağlantı Hatası veya Zaman Aşımı!"
-
-                UrlRequest(full_url, on_success=on_success, on_failure=on_failure, on_error=on_error, timeout=25)
-                
-            download_btn.bind(on_release=do_download)
-            popup.open()
-        except Exception as e:
-            self.status_label.text = "❌ Panel Açma Hatası!"
 
     def populate_groups(self):
         self.group_layout.clear_widgets()
@@ -408,7 +282,6 @@ class CinemaIPTVAndroid(BoxLayout):
         except:
             self.status_label.text = "❌ Oynatma Hatası!"
 
-
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
             self.remove_widget(self.left_panel)
@@ -454,6 +327,16 @@ class CinemaIPTVApp(App):
     def build(self):
         Window.clearcolor = (0.07, 0.07, 0.07, 1)
         return CinemaIPTVAndroid()
+
+    def on_stop(self):
+        try:
+            from jnius import autoclass
+            Activity = autoclass('org.kivy.android.PythonActivity').mActivity
+            Build = autoclass('android.os.Build$VERSION')
+            if Build.SDK_INT >= 26:
+                Activity.enterPictureInPictureMode()
+        except:
+            pass
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
