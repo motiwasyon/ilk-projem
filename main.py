@@ -133,31 +133,80 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def show_server_popup(self, instance):
         try:
-            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(8))
+            from kivy.uix.textinput import TextInput
+            from kivy.uix.gridlayout import GridLayout
             
-            # Form Düzeni (Grid)
-            grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.70)
+            content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+            grid = GridLayout(cols=2, spacing=dp(8), size_hint_y=0.65)
             
-            grid.add_widget(Label(text="URL:", size_hint_x=0.25, font_size=dp(12)))
+            grid.add_widget(Label(text="URL:", size_hint_x=0.25, font_size=dp(13)))
             self.server_input = TextInput(text="http://xtvglobal.xyz:2095", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.server_input)
             
-            grid.add_widget(Label(text="User:", size_hint_x=0.25, font_size=dp(12)))
+            grid.add_widget(Label(text="User:", size_hint_x=0.25, font_size=dp(13)))
             self.user_input = TextInput(hint_text="Kullanici Adi", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.user_input)
             
-            grid.add_widget(Label(text="Pass:", size_hint_x=0.25, font_size=dp(12)))
+            grid.add_widget(Label(text="Pass:", size_hint_x=0.25, font_size=dp(13)))
             self.pass_input = TextInput(hint_text="Sifre", password=True, multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.pass_input)
             
             content.add_widget(grid)
             
-            # Listeyi İndir Butonu
-            download_btn = Button(text="Listeyi İndir", background_color=(0.17, 0.47, 0.89, 1), size_hint_y=0.30, font_weight="bold")
+            download_btn = Button(text="Listeyi İndir ve Yükle", background_color=(0.17, 0.47, 0.89, 1), size_hint_y=0.35, font_size=dp(14))
             content.add_widget(download_btn)
             
-            popup = Popup(title='🌐 Xtream Sunucu Girişi', content=content, size_hint=(0.85, 0.55))
+            popup = Popup(title='🌐 SelgeTV Xtream Bağlantısı', content=content, size_hint=(0.85, 0.60))
             
+            def do_download(inst):
+                srv = self.server_input.text.strip()
+                usr = self.user_input.text.strip()
+                pas = self.pass_input.text.strip()
+                
+                if not srv or not usr or not pas:
+                    self.status_label.text = "❌ Lütfen tüm alanları doldurun!"
+                    return
+                
+                if not srv.startswith("http"):
+                    srv = "http://" + srv
+                if srv.endswith('/'):
+                    srv = srv[:-1]
+                    
+                self.status_label.text = "🔄 Sunucuya bağlanılıyor, liste indiriliyor..."
+                full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
+                
+                def on_success(req, result):
+                    try:
+                        from kivy.app import App
+                        safe_dir = App.get_running_app().user_data_dir
+                        safe_path = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
+                        
+                        with open(safe_path, "w", encoding="utf-8", errors="ignore") as f:
+                            f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
+                        
+                        if self.core.parse_m3u(safe_path):
+                            self.status_label.text = "✅ Liste Başarıyla Yüklendi!"
+                            self.populate_groups()
+                            popup.dismiss()
+                        else:
+                            self.status_label.text = "❌ İndirilen liste çözümlenemedi!"
+                    except:
+                        self.status_label.text = "❌ Dosya Yazma Hatası!"
+
+                def on_failure(req, result):
+                    self.status_label.text = "❌ Sunucu bağlantısı başarısız!"
+
+                def on_error(req, error):
+                    self.status_label.text = "❌ Bağlantı hatası veya zaman aşımı!"
+
+                UrlRequest(full_url, on_success=on_success, on_failure=on_failure, on_error=on_error, timeout=25)
+                
+            download_btn.bind(on_release=do_download)
+            popup.open()
+        except Exception as e:
+            self.status_label.text = f"❌ Form Hatası: {str(e)[:30]}"
+
+         
             def do_download(inst):
                 srv = self.server_input.text.strip()
                 usr = self.user_input.text.strip()
@@ -294,6 +343,27 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
