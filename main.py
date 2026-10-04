@@ -39,8 +39,34 @@ class CinemaIPTVAndroid(BoxLayout):
             self.server_btn.bind(on_release=self.show_server_popup)
             self.left_panel.add_widget(self.server_btn)
 
-            self.search_input = TextInput(hint_text="Film/Kanal Ara...", multiline=False, size_hint_y=0.07, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
-            self.left_panel.add_widget(self.search_input)
+            # ✅ YENİ SATIRLAR: Klavyeyle tam uyumlu, harf silinebilen ve "ARA" butonlu gelişmiş katman
+            search_row = BoxLayout(orientation='horizontal', size_hint_y=0.08, spacing=dp(4))
+            self.search_input = TextInput(text="", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1), input_type='text', keyboard_suggestions=False)
+            search_btn = Button(text="🔍 ARA", size_hint_x=0.25, background_color=(0.17, 0.47, 0.89, 1), font_size=dp(11), font_weight='bold')
+            
+            # Butona basıldığında listeyi tarayıp sadece aranan kelimeyi sağ panele basan filtre mekanizması
+            def filter_channels_by_search(inst):
+                aranan_kelime = self.search_input.text.strip().lower()
+                if aranan_kelime:
+                    self.group_layout.clear_widgets()
+                    back_btn = Button(text="⬅ KATEGORİLERE DÖN", size_hint_y=None, height=dp(42), background_color=(0.8, 0.2, 0.2, 1))
+                    back_btn.bind(on_release=lambda x: self.populate_groups())
+                    self.group_layout.add_widget(back_btn)
+                    
+                    for g_name, ch_list in self.core.channels_by_group.items():
+                        for ch in ch_list:
+                            ch_name = ch.get("name", "").lower()
+                            if aranan_kelime in ch_name:
+                                btn = Button(text=f"📺 {ch.get('name', '')}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
+                                btn.bind(on_release=lambda instance, url=ch.get("url", ""), name=ch.get("name", ""): self.start_playback(url, name))
+                                self.group_layout.add_widget(btn)
+                    self.status_label.text = f"🔍 '{self.search_input.text}' için arama sonuçları listelendi."
+            
+            search_btn.bind(on_release=filter_channels_by_search)
+            search_row.add_widget(self.search_input)
+            search_row.add_widget(search_btn)
+            self.left_panel.add_widget(search_row)
+
 
             self.scroll_groups = ScrollView(size_hint_y=0.85)
             self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
@@ -280,18 +306,33 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def start_playback(self, url, name):
         try:
+            self.status_label.text = f"⏳ Harici Motor Tetikleniyor: {name}"
+            
+            from kivy.utils import platform
+            if platform == 'android':
+                try:
+                    from jnius import autoclass
+                    Intent = autoclass('android.content.Intent')
+                    Uri = autoclass('android.net.Uri')
+                    PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                    currentActivity = PythonActivity.mActivity
+                    
+                    video_uri = Uri.parse(url)
+                    intent = Intent(Intent.ACTION_VIEW)
+                    
+                    # 🚀 Evrensel MIME Tipi: Hem .mkv hem .ts formatlarını Android'in kendi sinema motoruna zorla dikte eder
+                    intent.setDataAndType(video_uri, "*/*")
+                    
+                    chooser = Intent.createChooser(intent, "Yayını İzlemek İçin Oynatıcı Seçin:")
+                    currentActivity.startActivity(chooser)
+                    return
+                except Exception as inner_err:
+                    self.status_label.text = f"🚨 Android Köprü Hatası: {str(inner_err)[:20]}"
+                    return
+
             if not self.video:
                 self.video_container.clear_widgets()
-                video_options = {
-                    'eos': 'loop',
-                    'buffering': 12000,
-                    'hw_decoder': False,
-                    'options': {
-                        'framedrop': True,
-                        'sync': 'audio'
-                    }
-                }
-                self.video = Video(source='', state='stop', options=video_options, size_hint_y=1)
+                self.video = Video(source='', state='stop', options={'eos': 'loop'}, size_hint_y=1)
                 self.video_container.add_widget(self.video)
                 
             self.video.unload()
@@ -299,8 +340,9 @@ class CinemaIPTVAndroid(BoxLayout):
             self.video.state = 'play'
             self.play_btn.text = "⏸ Duraklat"
             self.status_label.text = f"📺 Oynatılıyor: {name}"
-        except:
-            self.status_label.text = "❌ Oynatma Hatası!"
+        except Exception as e:
+            self.status_label.text = f"🚨 Sistem Hatası: {str(e)[:20]}"
+
 
 
     def toggle_fullscreen_mode(self, instance=None):
@@ -361,6 +403,17 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
+    def on_stop(self):
+        try:
+            from jnius import autoclass
+            Activity = autoclass('org.kivy.android.PythonActivity').mActivity
+            Build = autoclass('android.os.Build$VERSION')
+            if Build.SDK_INT >= 26:
+                Activity.enterPictureInPictureMode()
+        except:
+            pass
+
 
 
 
