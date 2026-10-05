@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -39,12 +38,10 @@ class CinemaIPTVAndroid(BoxLayout):
             self.server_btn.bind(on_release=self.show_server_popup)
             self.left_panel.add_widget(self.server_btn)
 
-            # ✅ YENİ SATIRLAR: Klavyeyle tam uyumlu, harf silinebilen ve "ARA" butonlu gelişmiş katman
             search_row = BoxLayout(orientation='horizontal', size_hint_y=0.08, spacing=dp(4))
             self.search_input = TextInput(text="", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1), input_type='text', keyboard_suggestions=False)
             search_btn = Button(text="🔍 ARA", size_hint_x=0.25, background_color=(0.17, 0.47, 0.89, 1), font_size=dp(11), font_weight='bold')
             
-            # Butona basıldığında listeyi tarayıp sadece aranan kelimeyi sağ panele basan filtre mekanizması
             def filter_channels_by_search(inst):
                 aranan_kelime = self.search_input.text.strip().lower()
                 if aranan_kelime:
@@ -66,7 +63,6 @@ class CinemaIPTVAndroid(BoxLayout):
             search_row.add_widget(self.search_input)
             search_row.add_widget(search_btn)
             self.left_panel.add_widget(search_row)
-
 
             self.scroll_groups = ScrollView(size_hint_y=0.85)
             self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
@@ -139,7 +135,6 @@ class CinemaIPTVAndroid(BoxLayout):
             self.timeline.value = self.video.position
             self.time_curr.text = str(int(self.video.position))
             self.time_total.text = str(int(self.video.duration))
-
     def show_server_popup(self, instance):
         try:
             from kivy.uix.textinput import TextInput
@@ -157,9 +152,7 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Kayıtlı Liste Bulunmuyor"]
                 
-            # ✅ YENİ DÜZELTİLMİŞ SATIR: [0] indeks eki sayesinde Spinner artık sadece saf metin (str) okur ve asla çökmez
             self.file_spinner = Spinner(text=hafizadaki_listeler[0], values=hafizadaki_listeler, size_hint_y=0.15, background_color=(0.2, 0.2, 0.2, 1))
-
             content.add_widget(Label(text="📱 Kayıtlı Listeleriniz:", size_hint_y=0.05, font_size=dp(11)))
             content.add_widget(self.file_spinner)
             
@@ -266,7 +259,6 @@ class CinemaIPTVAndroid(BoxLayout):
             popup.open()
         except Exception as e:
             self.status_label.text = f"❌ Panel Hatası: {str(e)[:30]}"
-
     def populate_groups(self):
         self.group_layout.clear_widgets()
         for g_name in sorted(self.core.channels_by_group.keys()):
@@ -277,7 +269,6 @@ class CinemaIPTVAndroid(BoxLayout):
     def load_channels(self, group_name):
         try:
             self.group_layout.clear_widgets()
-            
             back_btn = Button(text="⬅ KATEGORİLERE DÖN", size_hint_y=None, height=dp(42), background_color=(0.8, 0.2, 0.2, 1))
             back_btn.bind(on_release=lambda inst: self.populate_groups())
             self.group_layout.add_widget(back_btn)
@@ -285,21 +276,20 @@ class CinemaIPTVAndroid(BoxLayout):
             ch_list = self.core.channels_by_group.get(group_name, [])
             grouped_shows = self.core.group_shows(ch_list)
 
-            for show_name, episodes in grouped_shows.items():
+            for show_name, idx_data in grouped_shows.items():
                 btn = Button(text=f"🎬 {show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
-                if episodes:
-                    # 🧬 AKILLI TİP DEDEKTÖRÜ: Gelen verinin list mi dict mi olduğunu otomatik çözer ve asla hata vermez
-                    if isinstance(episodes, list) and len(episodes) > 0:
-                        first_ep_url = episodes[0].get("url", "") if isinstance(episodes[0], dict) else ""
-                    elif isinstance(episodes, dict):
-                        first_ep_url = episodes.get("url", "")
+                if idx_data:
+                    # 🧬 MUTLAK KESİN ÇÖZÜM: episodes liste olduğunda ilk elemanı sözlük olarak güvenle tarar
+                    if isinstance(idx_data, list) and len(idx_data) > 0:
+                        first_ep_url = idx_data[0].get("url", "") if isinstance(idx_data[0], dict) else ""
+                    elif isinstance(idx_data, dict):
+                        first_ep_url = idx_data.get("url", "")
                     else:
                         first_ep_url = ""
                         
                     if first_ep_url:
                         btn.bind(on_release=lambda instance, url=first_ep_url, name=show_name: self.start_playback(url, name))
                 self.group_layout.add_widget(btn)
-                
             self.status_label.text = f"📂 {group_name} kategorisi yüklendi."
         except Exception as e:
             self.status_label.text = f"🚨 Sağ Liste Hatası: {str(e)[:25]}"
@@ -307,7 +297,6 @@ class CinemaIPTVAndroid(BoxLayout):
     def start_playback(self, url, name):
         try:
             self.status_label.text = f"⏳ Harici Motor Tetikleniyor: {name}"
-            
             from kivy.utils import platform
             if platform == 'android':
                 try:
@@ -316,11 +305,10 @@ class CinemaIPTVAndroid(BoxLayout):
                     Uri = autoclass('android.net.Uri')
                     PythonActivity = autoclass('org.kivy.android.PythonActivity')
                     currentActivity = PythonActivity.mActivity
-                    
                     video_uri = Uri.parse(url)
                     intent = Intent(Intent.ACTION_VIEW)
                     
-                    # 🚀 Evrensel MIME Tipi: Hem .mkv hem .ts formatlarını Android'in kendi sinema motoruna zorla dikte eder
+                    # 🌐 Evrensel Joker MIME: mp4, mkv, ts, m3u8 formatlarını VLC veya MX Player'a doğrudan fırlatır
                     intent.setDataAndType(video_uri, "*/*")
                     
                     chooser = Intent.createChooser(intent, "Yayını İzlemek İçin Oynatıcı Seçin:")
@@ -329,12 +317,10 @@ class CinemaIPTVAndroid(BoxLayout):
                 except Exception as inner_err:
                     self.status_label.text = f"🚨 Android Köprü Hatası: {str(inner_err)[:20]}"
                     return
-
             if not self.video:
                 self.video_container.clear_widgets()
                 self.video = Video(source='', state='stop', options={'eos': 'loop'}, size_hint_y=1)
                 self.video_container.add_widget(self.video)
-                
             self.video.unload()
             self.video.source = url
             self.video.state = 'play'
@@ -342,8 +328,6 @@ class CinemaIPTVAndroid(BoxLayout):
             self.status_label.text = f"📺 Oynatılıyor: {name}"
         except Exception as e:
             self.status_label.text = f"🚨 Sistem Hatası: {str(e)[:20]}"
-
-
 
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
@@ -403,17 +387,6 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
-
-    def on_stop(self):
-        try:
-            from jnius import autoclass
-            Activity = autoclass('org.kivy.android.PythonActivity').mActivity
-            Build = autoclass('android.os.Build$VERSION')
-            if Build.SDK_INT >= 26:
-                Activity.enterPictureInPictureMode()
-        except:
-            pass
-
 
 
 
