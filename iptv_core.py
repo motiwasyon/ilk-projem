@@ -26,13 +26,9 @@ class IPTVCoreLogic:
                         group = g_match.group(1).strip() if g_match else "Diger"
                         idx = line.rfind(',')
                         name = line[idx+1:].strip() if idx != -1 else "Kanal"
-                        
-                        # 🧬 KORUMA BARİYERİ 1: Kivy içsel kelimelerini daha okuma aşamasında engelle
-                        if name in ['font_name', 'font_size', 'height', 'ids', 'italic', 'halign', 'markup']:
-                            name = None
-                    elif line.startswith("http") and name and group:
-                        # 🧬 KORUMA BARİYERİ 2: Boş grup veya boş kanal isimlerini listeye asla alma, temizle
-                        if group.strip() == "" or name.strip() == "":
+                    elif line.startswith("http") and name:
+                        # 🧬 SİSTEM PARAMETRELERİNİN VERİ TABANINA SIZMASINI ÖNLEYEN ANA KALKAN
+                        if name in ['font_name', 'font_size', 'height', 'ids', 'italic', 'halign', 'markup', 'font_family', 'font_features', 'font_hinting', 'font_kerning', 'font_script_name', 'is_shortened', 'last_touch', 'limit_render_to_text_bbox', 'line_height', 'max_lines', 'min_state']:
                             name = None
                             continue
                             
@@ -44,24 +40,24 @@ class IPTVCoreLogic:
         except:
             return False
 
-    def group_shows(self, channels):
+    def group_shows(self, channel_list):
         try:
             shows = {}
-            if not isinstance(channels, list):
+            if not channel_list:
                 return shows
                 
-            for ch in channels:
-                if not isinstance(ch, dict):
-                    continue
-                name = ch.get("name", "").strip()
-                url = ch.get("url", "")
+            for c in channel_list:
+                ch_name = c.get("name", "Kanal")
+                url = c.get("url", "")
                 
-                if url and name:
-                    # 🧬 KORUMA BARİYERİ 3: Harf ve kelime bazlı tüm grafik sızıntılarını tamamen yok et
-                    if name.startswith('_') or 'font_' in name or 'line_' in name or name in ['height', 'ids', 'italic', 'halign', 'markup', 'max_lines', 'min_state', 'last_touch']:
-                        continue
-                    shows[name] = {"url": url}
+                # 🧬 KİRLİ VERİLERİN SAĞ LİSTEYE GEÇİŞİNİ ENGELLEYEN İKİNCİ BARİYER
+                if ch_name in ['font_name', 'font_size', 'height', 'ids', 'italic', 'halign', 'markup', 'font_family', 'font_features', 'font_hinting', 'font_kerning', 'font_script_name', 'is_shortened', 'last_touch', 'limit_render_to_text_bbox', 'line_height', 'max_lines', 'min_state']:
+                    continue
+                    
+                if url:
+                    shows[ch_name] = {"url": url}
             return shows
         except:
             return {}
+
 
