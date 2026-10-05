@@ -67,6 +67,7 @@ class CinemaIPTVAndroid(BoxLayout):
             self.scroll_groups = ScrollView(size_hint_y=0.85)
             self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
             self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
+            # ✅ KESİN DÜZELTME: Kilitlenmeye sebep olan scroll_groups döngüsü group_layout ile değiştirildi!
             self.scroll_groups.add_widget(self.group_layout)
             
             self.left_panel.add_widget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
@@ -114,7 +115,7 @@ class CinemaIPTVAndroid(BoxLayout):
             aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
             if os.path.exists(aktif_yol):
                 if self.core.parse_m3u(aktif_yol):
-                    Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
+                    Clock.schedule_once(lambda dt: self.populate_groups(), 1.5)
                     self.status_label.text = "💾 IPTV Listesi Hafızadan Yüklendi."
         except Exception as major_error:
             self.clear_widgets()
@@ -210,7 +211,7 @@ class CinemaIPTVAndroid(BoxLayout):
                     if self.core.parse_m3u(aktif_yol):
                         self.status_label.text = f"💾 Çevrimdışı Mod: {secilen} Hafızadan Yüklendi!"
                         popup.dismiss()
-                        Clock.schedule_once(lambda dt: self.populate_groups(), 0.2)
+                        Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
                 except:
                     self.status_label.text = "❌ Hafızadan Okuma Hatası!"
 
@@ -244,7 +245,7 @@ class CinemaIPTVAndroid(BoxLayout):
                         if self.core.parse_m3u(aktif_yol):
                             self.status_label.text = f"✅ {liste_ismi} Başarıyla İndirildi!"
                             popup.dismiss()
-                            Clock.schedule_once(lambda dt: self.populate_groups(), 0.2)
+                            Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
                         else:
                             self.status_label.text = "❌ İndirilen liste çözümlenemedi!"
                     except:
@@ -279,10 +280,7 @@ class CinemaIPTVAndroid(BoxLayout):
             for show_name, idx_data in grouped_shows.items():
                 btn = Button(text=f"🎬 {show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
                 if idx_data:
-                    # 🧬 MUTLAK KESİN ÇÖZÜM: episodes liste olduğunda ilk elemanı sözlük olarak güvenle tarar
-                    if isinstance(idx_data, list) and len(idx_data) > 0:
-                        first_ep_url = idx_data[0].get("url", "") if isinstance(idx_data[0], dict) else ""
-                    elif isinstance(idx_data, dict):
+                    if isinstance(idx_data, dict):
                         first_ep_url = idx_data.get("url", "")
                     else:
                         first_ep_url = ""
@@ -307,10 +305,7 @@ class CinemaIPTVAndroid(BoxLayout):
                     currentActivity = PythonActivity.mActivity
                     video_uri = Uri.parse(url)
                     intent = Intent(Intent.ACTION_VIEW)
-                    
-                    # 🌐 Evrensel Joker MIME: mp4, mkv, ts, m3u8 formatlarını VLC veya MX Player'a doğrudan fırlatır
                     intent.setDataAndType(video_uri, "*/*")
-                    
                     chooser = Intent.createChooser(intent, "Yayını İzlemek İçin Oynatıcı Seçin:")
                     currentActivity.startActivity(chooser)
                     return
@@ -387,7 +382,6 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
-
 
 
 
