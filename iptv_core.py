@@ -10,7 +10,6 @@ class IPTVCoreLogic:
     def parse_m3u(self, file_path):
         self.channels_by_group = {}
         try:
-            # 📱 Android işletim sisteminde dosya yolunu korumalı alana yönlendiriyoruz
             if not os.path.isabs(file_path):
                 from kivy.app import App
                 file_path = os.path.join(App.get_running_app().user_data_dir, file_path)
@@ -33,22 +32,22 @@ class IPTVCoreLogic:
                         self.channels_by_group[group].append({"name": name, "url": line})
                         name = None
             return True
-        except Exception as e:
+        except:
             return False
 
     def group_shows(self, channel_list):
-        shows = {}
-        for c in channel_list:
-            ch_name = c["name"]
-            match = re.search(r'(.*?)\s+([Ss]\d+\s*[Ee]\d+|[Ss]\d+[Ee]\d+|[Ss]ezon\s+\d+|[Bb]ölüm\s+\d+)', ch_name)
-            if match:
-                show_name = match.group(1).strip()
-                ep_name = match.group(2).strip()
-                remaining = ch_name[match.end():].strip()
-                if remaining: ep_name = f"{ep_name} {remaining}"
-            else:
-                show_name = ch_name
-                ep_name = "Oynat"
-            if show_name not in shows: shows[show_name] = []
-            shows[show_name].append({"ep_name": ep_name, "url": c["url"], "full_name": ch_name})
-        return shows
+        try:
+            shows = {}
+            for c in channel_list:
+                ch_name = c.get("name", "Kanal")
+                url = c.get("url", "")
+                if url:
+                    # Kivy bileşen kodlarının veri setine sızmasını engelleyen koruma
+                    if ch_name in ['font_name', 'font_size', 'height', 'ids', 'italic']:
+                        continue
+                    # main.py ile %100 uyumlu sözlük (dict) biçimlendirmesi
+                    shows[ch_name] = {"url": url}
+            return shows
+        except:
+            return {}
+
