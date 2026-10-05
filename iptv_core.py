@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import os
 import re
@@ -35,18 +36,17 @@ class IPTVCoreLogic:
         except:
             return False
 
-    def group_shows(self, channel_list):
+    def group_shows(self, channels):
         try:
             shows = {}
-            for c in channel_list:
-                ch_name = c.get("name", "Kanal")
-                url = c.get("url", "")
-                if url:
-                    # Kivy bileşen kodlarının veri setine sızmasını engelleyen koruma
-                    if ch_name in ['font_name', 'font_size', 'height', 'ids', 'italic']:
+            for ch in channels:
+                name = ch.get("name", "").strip()
+                url = ch.get("url", "")
+                if url and name:
+                    # 🧬 Gelişmiş Tam Koruma: Kivy içsel özelliklerini ve gizli sızıntıları harf bazında engelleyen bariyer
+                    if name.startswith('_') or 'font_' in name or 'line_' in name or name in ['height', 'ids', 'italic', 'halign', 'markup', 'max_lines', 'min_state', 'last_touch', 'limit_render_to_text_bbox']:
                         continue
-                    # main.py ile %100 uyumlu sözlük (dict) biçimlendirmesi
-                    shows[ch_name] = {"url": url}
+                    shows[name] = {"url": url}
             return shows
         except:
             return {}
