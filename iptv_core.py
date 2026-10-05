@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 import os
 import re
@@ -27,7 +26,16 @@ class IPTVCoreLogic:
                         group = g_match.group(1).strip() if g_match else "Diger"
                         idx = line.rfind(',')
                         name = line[idx+1:].strip() if idx != -1 else "Kanal"
-                    elif line.startswith("http") and name:
+                        
+                        # 🧬 KORUMA BARİYERİ 1: Kivy içsel kelimelerini daha okuma aşamasında engelle
+                        if name in ['font_name', 'font_size', 'height', 'ids', 'italic', 'halign', 'markup']:
+                            name = None
+                    elif line.startswith("http") and name and group:
+                        # 🧬 KORUMA BARİYERİ 2: Boş grup veya boş kanal isimlerini listeye asla alma, temizle
+                        if group.strip() == "" or name.strip() == "":
+                            name = None
+                            continue
+                            
                         if group not in self.channels_by_group:
                             self.channels_by_group[group] = []
                         self.channels_by_group[group].append({"name": name, "url": line})
@@ -39,12 +47,18 @@ class IPTVCoreLogic:
     def group_shows(self, channels):
         try:
             shows = {}
+            if not isinstance(channels, list):
+                return shows
+                
             for ch in channels:
+                if not isinstance(ch, dict):
+                    continue
                 name = ch.get("name", "").strip()
                 url = ch.get("url", "")
+                
                 if url and name:
-                    # 🧬 Gelişmiş Tam Koruma: Kivy içsel özelliklerini ve gizli sızıntıları harf bazında engelleyen bariyer
-                    if name.startswith('_') or 'font_' in name or 'line_' in name or name in ['height', 'ids', 'italic', 'halign', 'markup', 'max_lines', 'min_state', 'last_touch', 'limit_render_to_text_bbox']:
+                    # 🧬 KORUMA BARİYERİ 3: Harf ve kelime bazlı tüm grafik sızıntılarını tamamen yok et
+                    if name.startswith('_') or 'font_' in name or 'line_' in name or name in ['height', 'ids', 'italic', 'halign', 'markup', 'max_lines', 'min_state', 'last_touch']:
                         continue
                     shows[name] = {"url": url}
             return shows
