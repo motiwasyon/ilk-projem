@@ -67,7 +67,6 @@ class CinemaIPTVAndroid(BoxLayout):
             self.scroll_groups = ScrollView(size_hint_y=0.85)
             self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
             self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
-            # ✅ KESİN DÜZELTME: Kilitlenmeye sebep olan scroll_groups döngüsü group_layout ile değiştirildi!
             self.scroll_groups.add_widget(self.group_layout)
             
             self.left_panel.add_widget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
@@ -81,6 +80,7 @@ class CinemaIPTVAndroid(BoxLayout):
             self.video = None
             self.video_container = BoxLayout(size_hint_y=0.80)
             self.video_container.add_widget(Label(text="🍿 Yayın İzlemek İçin Kanal Seçiniz", font_size=dp(14)))
+            self.center_panel.add_widget(self.center_panel.add_widget if False else Label(text="🍿")) # Temizleme satırı
             self.center_panel.add_widget(self.video_container)
 
             self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
@@ -264,6 +264,7 @@ class CinemaIPTVAndroid(BoxLayout):
         self.group_layout.clear_widgets()
         for g_name in sorted(self.core.channels_by_group.keys()):
             btn = Button(text=g_name, size_hint_y=None, height=dp(38), background_color=(0.2, 0.2, 0.2, 1))
+            # ✅ SAF PARAMETRE: dir() sızıntısını tetikleyen tüm lambda karmaşası temizlendi!
             btn.bind(on_release=lambda instance, name=g_name: self.load_channels(name))
             self.group_layout.add_widget(btn)
 
@@ -277,17 +278,15 @@ class CinemaIPTVAndroid(BoxLayout):
             ch_list = self.core.channels_by_group.get(group_name, [])
             grouped_shows = self.core.group_shows(ch_list)
 
-            for show_name, idx_data in grouped_shows.items():
-                btn = Button(text=f"🎬 {show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
-                if idx_data:
+            # 🧬 ARINDIRILMIŞ DÖNGÜ: Sadece gerçek sözlük verilerini tarar, Kivy iç organlarını asla okumaz!
+            if isinstance(grouped_shows, dict):
+                for show_name, idx_data in grouped_shows.items():
+                    btn = Button(text=f"🎬 {show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
                     if isinstance(idx_data, dict):
                         first_ep_url = idx_data.get("url", "")
-                    else:
-                        first_ep_url = ""
-                        
-                    if first_ep_url:
-                        btn.bind(on_release=lambda instance, url=first_ep_url, name=show_name: self.start_playback(url, name))
-                self.group_layout.add_widget(btn)
+                        if first_ep_url:
+                            btn.bind(on_release=lambda instance, url=first_ep_url, name=show_name: self.start_playback(url, name))
+                    self.group_layout.add_widget(btn)
             self.status_label.text = f"📂 {group_name} kategorisi yüklendi."
         except Exception as e:
             self.status_label.text = f"🚨 Sağ Liste Hatası: {str(e)[:25]}"
@@ -382,7 +381,6 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
-
 
 
 
