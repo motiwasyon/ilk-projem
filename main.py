@@ -148,8 +148,32 @@ class CinemaIPTVAndroid(BoxLayout):
             from kivy.uix.gridlayout import GridLayout
             from kivy.uix.spinner import Spinner
             from kivy.app import App
-            from kivy.core.clipboard import Clipboard
             
+            # Kivy'nin hatalı Clipboard modülü yerine yerel Android panosunu çağıran güvenli fonksiyon
+            def get_system_clipboard():
+                from kivy.utils import platform
+                if platform == 'android':
+                    try:
+                        from jnius import autoclass
+                        PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                        Context = autoclass('android.content.Context')
+                        clipboard_service = PythonActivity.mActivity.getSystemService(Context.CLIPBOARD_SERVICE)
+                        if clipboard_service.hasPrimaryClip():
+                            primary_clip = clipboard_service.getPrimaryClip()
+                            if primary_clip.getItemCount() > 0:
+                                return str(primary_clip.getItemAt(0).getText())
+                    except Exception:
+                        pass
+                else:
+                    try:
+                        from kivy.core.clipboard import Clipboard
+                        text = str(Clipboard.paste()).strip()
+                        if not text.startswith('<kivy.') and 'font_' not in text and 'halign' not in text:
+                            return text
+                    except Exception:
+                        pass
+                return ""
+
             content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(6))
             safe_dir = App.get_running_app().user_data_dir
             
@@ -170,28 +194,28 @@ class CinemaIPTVAndroid(BoxLayout):
             self.server_input = TextInput(text="", multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1), input_type='text', keyboard_suggestions=False)
             grid.add_widget(self.server_input)
             url_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
-            url_paste.bind(on_release=lambda x: setattr(self.server_input, 'text', Clipboard.paste()))
+            url_paste.bind(on_release=lambda x: setattr(self.server_input, 'text', get_system_clipboard()))
             grid.add_widget(url_paste)
             
             grid.add_widget(Label(text="User:", size_hint_x=0.15, font_size=dp(12)))
             self.user_input = TextInput(hint_text="Kullanici Adi", multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.user_input)
             user_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
-            user_paste.bind(on_release=lambda x: setattr(self.user_input, 'text', Clipboard.paste()))
+            user_paste.bind(on_release=lambda x: setattr(self.user_input, 'text', get_system_clipboard()))
             grid.add_widget(user_paste)
             
             grid.add_widget(Label(text="Pass:", size_hint_x=0.15, font_size=dp(12)))
             self.pass_input = TextInput(hint_text="Sifre", password=False, multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.pass_input)
             pass_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
-            pass_paste.bind(on_release=lambda x: setattr(self.pass_input, 'text', Clipboard.paste()))
+            pass_paste.bind(on_release=lambda x: setattr(self.pass_input, 'text', get_system_clipboard()))
             grid.add_widget(pass_paste)
             
             grid.add_widget(Label(text="İsim:", size_hint_x=0.15, font_size=dp(12)))
             self.name_input = TextInput(hint_text="Liste İsmi (Örn: Spor)", multiline=False, size_hint_x=0.65, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
             grid.add_widget(self.name_input)
             name_paste = Button(text="📋", size_hint_x=0.20, background_color=(0.3, 0.3, 0.3, 1))
-            name_paste.bind(on_release=lambda x: setattr(self.name_input, 'text', Clipboard.paste()))
+            name_paste.bind(on_release=lambda x: setattr(self.name_input, 'text', get_system_clipboard()))
             grid.add_widget(name_paste)
             
             content.add_widget(grid)
@@ -267,6 +291,7 @@ class CinemaIPTVAndroid(BoxLayout):
             popup.open()
         except Exception as e:
             self.status_label.text = f"❌ Panel Hatası: {str(e)[:30]}"
+
 
     def populate_groups(self):
         self.group_layout.clear_widgets()
@@ -396,6 +421,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
