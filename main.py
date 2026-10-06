@@ -14,7 +14,6 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.slider import Slider
 from kivy.uix.popup import Popup
 from kivy.uix.video import Video
-from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
 from kivy.metrics import dp
@@ -39,8 +38,6 @@ class CinemaIPTVAndroid(BoxLayout):
         # Dinamik core yüklemesi ile açılış kilidini kırıyoruz
         from iptv_core import IPTVCoreLogic
         self.core = IPTVCoreLogic()
-        
-        Window.bind(on_key_down=self.on_key_down)
 
         # SOL PANEL (Kategoriler, Arama ve Sunucu Girişi)
         self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
@@ -160,7 +157,7 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Bos Slot"]
                 
-            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0] if hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler if hafizadaki_listeler else ["Bos Slot"], size_hint_y=0.15)
+            self.file_spinner = Spinner(text=str(hafizadaki_listeler if hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler if hafizadaki_listeler else ["Bos Slot"], size_hint_y=0.15)
             content.add_widget(self.file_spinner)
             
             grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.60)
@@ -291,6 +288,8 @@ class CinemaIPTVAndroid(BoxLayout):
 
 class CinemaIPTVApp(App):
     def build(self):
+        # 🧬 GÜVENLİK ADIMI: Grafik birimi renk sıfırlaması Window ayağa kalktıktan sonra yapılıyor
+        from kivy.core.window import Window
         Window.clearcolor = (0.07, 0.07, 0.07, 1)
         return CinemaIPTVAndroid()
 
