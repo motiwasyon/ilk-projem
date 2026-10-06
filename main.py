@@ -4,7 +4,6 @@ import sys
 import re
 from datetime import datetime
 
-# 🧬 KRİTİK GÜVENLİK AYARI: Sistem kilitlenmelerini engellemek için pencereleri baştan izole ediyoruz
 from kivy.config import Config
 Config.set('graphics', 'resizable', '0')
 
@@ -23,109 +22,110 @@ from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
 from kivy.metrics import dp 
 
-# Çökmeyi engellemek için core modülünü sadece ihtiyaç duyulduğunda yükleyecek dinamik yapıya geçiyoruz
 class CinemaIPTVAndroid(BoxLayout):
     def __init__(self, **kwargs):
-        # Hata yakalama mekanizmasını Kivy arayüzünden tamamen ayırıyoruz
-        try:
-            super().__init__(**kwargs)
-            self.orientation = 'horizontal'
-            
-            # Dinamik import ile açılış kilidini kırıyoruz
-            from iptv_core import IPTVCoreLogic
-            self.core = IPTVCoreLogic()
-            
-            self.current_volume = 0.7
-            self.is_fullscreen = False
-            
-            Window.bind(on_key_down=self.on_key_down)
-            Window.bind(on_motion=self.on_mouse_motion)
+        super().__init__(**kwargs)
+        self.orientation = 'horizontal'
+        
+        # Dinamik core yüklemesi ile açılış güvenliği
+        from iptv_core import IPTVCoreLogic
+        self.core = IPTVCoreLogic()
+        
+        self.current_volume = 0.7
+        self.is_fullscreen = False
+        
+        Window.bind(on_key_down=self.on_key_down)
 
-            # SOL PANEL
-            self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
-            self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
-            self.server_btn.bind(on_release=self.show_server_popup)
-            self.left_panel.add_widget(self.server_btn)
+        # SOL PANEL (Kategoriler ve Giriş)
+        self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
+        self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
+        self.server_btn.bind(on_release=self.show_server_popup)
+        self.left_panel.add_widget(self.server_btn)
 
-            search_row = BoxLayout(orientation='horizontal', size_hint_y=0.08, spacing=dp(4))
-            self.search_input = TextInput(text="", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1), input_type='text', keyboard_suggestions=False)
-            search_btn = Button(text="🔍 ARA", size_hint_x=0.25, background_color=(0.17, 0.47, 0.89, 1), font_size=dp(11), font_weight='bold')
-            
-            def filter_channels_by_search(inst):
-                aranan_kelime = self.search_input.text.strip().lower()
-                if aranan_kelime:
-                    self.group_layout.clear_widgets()
-                    back_btn = Button(text="⬅ KATEGORİLERE DÖN", size_hint_y=None, height=dp(42), background_color=(0.8, 0.2, 0.2, 1))
-                    back_btn.bind(on_release=lambda x: self.populate_groups())
-                    self.group_layout.add_widget(back_btn)
-                    
-                    for g_name, ch_list in self.core.channels_by_group.items():
-                        for ch in ch_list:
-                            ch_name = str(ch.get("name", "")).strip()
-                            if not ch_name or ch_name.startswith('<kivy.') or 'font_' in ch_name:
-                                continue
-                            if aranan_kelime in ch_name.lower():
-                                btn = Button(text=f"📺 {ch_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
-                                btn.bind(on_release=lambda instance, url=ch.get("url", ""), name=ch_name: self.start_playback(url, name))
-                                self.group_layout.add_widget(btn)
-                    self.status_label.text = f"🔍 '{self.search_input.text}' arandı."
-            
-            search_btn.bind(on_release=filter_channels_by_search)
-            search_row.add_widget(self.search_input)
-            search_row.add_widget(search_btn)
-            self.left_panel.add_widget(search_row)
+        search_row = BoxLayout(orientation='horizontal', size_hint_y=0.08, spacing=dp(4))
+        self.search_input = TextInput(text="", multiline=False, size_hint_x=0.75, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1), input_type='text', keyboard_suggestions=False)
+        search_btn = Button(text="🔍 ARA", size_hint_x=0.25, background_color=(0.17, 0.47, 0.89, 1), font_size=dp(11), font_weight='bold')
+        
+        def filter_channels_by_search(inst):
+            aranan_kelime = self.search_input.text.strip().lower()
+            if aranan_kelime:
+                self.group_layout.clear_widgets()
+                back_btn = Button(text="⬅ KATEGORİLERE DÖN", size_hint_y=None, height=dp(42), background_color=(0.8, 0.2, 0.2, 1))
+                back_btn.bind(on_release=lambda x: self.populate_groups())
+                self.group_layout.add_widget(back_btn)
+                
+                for g_name, ch_list in self.core.channels_by_group.items():
+                    for ch in ch_list:
+                        ch_name = str(ch.get("name", "")).strip()
+                        if not ch_name or ch_name.startswith('<kivy.') or 'font_' in ch_name:
+                            continue
+                        if aranan_kelime in ch_name.lower():
+                            btn = Button(text=f"📺 {ch_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
+                            btn.bind(on_release=lambda instance, url=ch.get("url", ""), name=ch_name: self.start_playback(url, name))
+                            self.group_layout.add_widget(btn)
+                self.status_label.text = f"🔍 Arama tamamlandı."
+        
+        search_btn.bind(on_release=filter_channels_by_search)
+        search_row.add_widget(self.search_input)
+        search_row.add_widget(search_btn)
+        self.left_panel.add_widget(search_row)
 
-            self.scroll_groups = ScrollView(size_hint_y=0.85)
-            self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
-            self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
-            self.scroll_groups.add_widget(self.group_layout)
-            
-            self.left_panel.add_widget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
-            self.left_panel.add_widget(self.scroll_groups)
-            self.add_widget(self.left_panel)
+        self.scroll_groups = ScrollView(size_hint_y=0.85)
+        self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
+        self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
+        self.scroll_groups.add_widget(self.group_layout)
+        
+        self.left_panel.add_widget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
+        self.left_panel.add_widget(self.scroll_groups)
+        self.add_widget(self.left_panel)
 
-            # MERKEZ PANEL
-            self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.70, 1), padding=dp(8), spacing=dp(4))
-            self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
-            self.center_panel.add_widget(self.status_label)
+        # MERKEZ PANEL (Oynatıcı Ekranı)
+        self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.70, 1), padding=dp(8), spacing=dp(4))
+        self.status_label = Label(text="📺 SelgeTV Premium", size_hint_y=0.05, font_size=dp(13))
+        self.center_panel.add_widget(self.status_label)
 
-            self.video = None
-            self.video_container = BoxLayout(size_hint_y=0.80)
-            self.video_container.add_widget(Label(text="🍿 Yayın İzlemek İçin Kanal Seçiniz", font_size=dp(14)))
-            self.center_panel.add_widget(self.video_container)
+        self.video = None
+        self.video_container = BoxLayout(size_hint_y=0.80)
+        self.video_container.add_widget(Label(text="🍿 Yayın İzlemek İçin Kanal Seçiniz", font_size=dp(14)))
+        self.center_panel.add_widget(self.video_container)
 
-            self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
-            self.hud_time_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.40)
-            self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
-            self.timeline = Slider(min=0, max=100, value=0, size_hint_x=0.70)
-            self.time_total = Label(text="00:00:00", size_hint_x=0.15)
-            self.hud_time_row.add_widget(self.time_curr)
-            self.hud_time_row.add_widget(self.timeline)
-            self.hud_time_row.add_widget(self.time_total)
-            self.hud_panel.add_widget(self.hud_time_row)
+        self.hud_panel = BoxLayout(orientation='vertical', size_hint_y=0.15, padding=dp(6), spacing=dp(4))
+        self.hud_time_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.40)
+        self.time_curr = Label(text="00:00:00", size_hint_x=0.15)
+        self.timeline = Slider(min=0, max=100, value=0, size_hint_x=0.70)
+        self.time_total = Label(text="00:00:00", size_hint_x=0.15)
+        self.hud_time_row.add_widget(self.time_curr)
+        self.hud_time_row.add_widget(self.timeline)
+        self.hud_time_row.add_widget(self.time_total)
+        self.hud_panel.add_widget(self.hud_time_row)
 
-            self.hud_ctrl_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.60)
-            self.play_btn = Button(text="▶ Oynat", background_color=(0.17, 0.47, 0.89, 1))
-            self.play_btn.bind(on_release=self.toggle_play)
-            self.ss_btn = Button(text="📸 Ekran Al", background_color=(0.4, 0.76, 0.23, 1))
-            self.ss_btn.bind(on_release=self.take_screenshot)
-            self.fs_btn = Button(text="📺 Tam Ekran")
-            self.fs_btn.bind(on_release=self.toggle_fullscreen_mode)
-            
-            self.hud_ctrl_row.add_widget(self.play_btn)
-            self.hud_ctrl_row.add_widget(self.ss_btn)
-            self.hud_ctrl_row.add_widget(self.fs_btn)
-            self.hud_panel.add_widget(self.hud_ctrl_row)
+        self.hud_ctrl_row = BoxLayout(orientation='horizontal', spacing=dp(8), size_hint_y=0.60)
+        self.play_btn = Button(text="▶ Oynat", background_color=(0.17, 0.47, 0.89, 1))
+        self.play_btn.bind(on_release=self.toggle_play)
+        self.ss_btn = Button(text="📸 Ekran Al", background_color=(0.4, 0.76, 0.23, 1))
+        self.fs_btn = Button(text="📺 Tam Ekran")
+        self.fs_btn.bind(on_release=self.toggle_fullscreen_mode)
+        
+        self.hud_ctrl_row.add_widget(self.play_btn)
+        self.hud_ctrl_row.add_widget(self.ss_btn)
+        self.hud_ctrl_row.add_widget(self.fs_btn)
+        self.hud_panel.add_widget(self.hud_ctrl_row)
 
-            self.center_panel.add_widget(self.hud_panel)
-            self.add_widget(self.center_panel)
+        self.center_panel.add_widget(self.hud_panel)
+        self.add_widget(self.center_panel)
 
-            Clock.schedule_interval(self.update_hud, 1.0)
-            
-        except Exception as system_crash_error:
-            # 🚨 KESİN KORUMA: Eğer Kivy çökerse panik listesi basmasını engellemek için metni tamamen temizliyoruz
-            print(f"CRITICAL CRASH: {str(system_crash_error)}")
-            self.clear_widgets()
+        Clock.schedule_interval(self.update_hud, 1.0)
+
+    # 🧬 ANDROID UYUMLU DOKUNMATİK PANEL GÖSTERGESİ
+    def on_touch_down(self, touch):
+        # Tıklama algılandığında alt kontrol panelini gösterir
+        self.hud_panel.opacity = 1.0
+        Clock.unschedule(self.fade_hud)
+        Clock.schedule_once(self.fade_hud, 4.0)
+        return super().on_touch_down(touch)
+
+    def fade_hud(self, dt):
+        self.hud_panel.opacity = 0.0
 
     def toggle_play(self, instance=None):
         if self.video and self.video.state == 'play':
@@ -156,8 +156,7 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Bos Slot"]
                 
-            # Spinner kilitlenmesini önlemek için doğrudan string bir etiket atıyoruz
-            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0]), values=hafizadaki_listeler, size_hint_y=0.15)
+            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0] if hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler, size_hint_y=0.15)
             content.add_widget(self.file_spinner)
             
             grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.60)
@@ -192,8 +191,7 @@ class CinemaIPTVAndroid(BoxLayout):
                     if self.core.parse_m3u(aktif_yol):
                         popup.dismiss()
                         Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
-                except Exception:
-                    pass
+                except Exception: pass
 
             def do_download(inst):
                 srv = self.server_input.text.strip()
@@ -203,38 +201,31 @@ class CinemaIPTVAndroid(BoxLayout):
                 
                 if not srv or not usr or not pas or not liste_ismi:
                     return
-                    
                 liste_ismi = re.sub(r'[^\w\-_]', '', liste_ismi)
                 if not srv.startswith("http"): srv = "http://" + srv
                 if srv.endswith('/'): srv = srv[:-1]
-                    
+                
                 full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
                 
                 def on_success(req, result):
                     try:
                         safe_path = os.path.join(safe_dir, f"slot_{liste_ismi}.m3u")
                         aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
-                        
                         with open(safe_path, "w", encoding="utf-8", errors="ignore") as f:
                             f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
                         with open(aktif_yol, "w", encoding="utf-8") as f:
                             f.write(result if isinstance(result, str) else result.decode('utf-8', errors='ignore'))
-                        
                         if self.core.parse_m3u(aktif_yol):
                             popup.dismiss()
                             Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
-                    except Exception:
-                        pass
+                    except Exception: pass
 
-                def on_failure(req, result): pass
-                def on_error(req, error): pass
-                UrlRequest(full_url, on_success=on_success, on_failure=on_failure, on_error=on_error, timeout=25)
+                UrlRequest(full_url, on_success=on_success, timeout=25)
 
             load_btn.bind(on_release=do_load_stored)
             download_btn.bind(on_release=do_download)
             popup.open()
-        except Exception:
-            pass
+        except Exception: pass
 
     def populate_groups(self):
         self.group_layout.clear_widgets()
@@ -258,8 +249,7 @@ class CinemaIPTVAndroid(BoxLayout):
                 btn = Button(text=f"📺 {ch_name}", size_hint_y=None, height=dp(40))
                 btn.bind(on_release=lambda instance, url=ch.get("url", ""), name=ch_name: self.start_playback(url, name))
                 self.group_layout.add_widget(btn)
-        except Exception:
-            pass
+        except Exception: pass
 
     def start_playback(self, url, name):
         try:
@@ -280,8 +270,7 @@ class CinemaIPTVAndroid(BoxLayout):
             self.video.unload()
             self.video.source = url
             self.video.state = 'play'
-        except Exception:
-            pass
+        except Exception: pass
 
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
@@ -297,17 +286,6 @@ class CinemaIPTVAndroid(BoxLayout):
         if key == 32: self.toggle_play()
         return True
 
-    def on_mouse_motion(self, window, etype, motionevent):
-        self.hud_panel.opacity = 1.0
-        Clock.unschedule(self.fade_hud)
-        Clock.schedule_once(self.fade_hud, 3.0)
-
-    def fade_hud(self, dt):
-        self.hud_panel.opacity = 0.0
-
-    def take_screenshot(self, instance=None):
-        pass
-
 class CinemaIPTVApp(App):
     def build(self):
         Window.clearcolor = (0.07, 0.07, 0.07, 1)
@@ -315,6 +293,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
