@@ -252,6 +252,10 @@ class CinemaIPTVAndroid(BoxLayout):
         except Exception: pass
 
     def start_playback(self, url, name):
+        """
+        🧬 JUST PLAYER ENTENGRASYONU:
+        Yayın tıklandığında Kivy'yi yormadan doğrudan Just Player'ı tam ekran açar.
+        """
         try:
             from kivy.utils import platform
             if platform == 'android':
@@ -259,10 +263,18 @@ class CinemaIPTVAndroid(BoxLayout):
                 Intent = autoclass('android.content.Intent')
                 Uri = autoclass('android.net.Uri')
                 currentActivity = autoclass('org.kivy.android.PythonActivity').mActivity
+                
+                video_uri = Uri.parse(url)
                 intent = Intent(Intent.ACTION_VIEW)
-                intent.setDataAndType(Uri.parse(url), "*/*")
-                currentActivity.startActivity(Intent.createChooser(intent, "Oynatici Secin:"))
+                intent.setDataAndType(video_uri, "video/*")
+                
+                # Doğrudan tablete kurduğumuz Just Player'ı paket adıyla çağırıyoruz
+                intent.setPackage("com.brouken.player")
+                
+                currentActivity.startActivity(intent)
                 return
+                
+            # Bilgisayar testleri için Kivy video motoru yedeği
             if not self.video:
                 self.video_container.clear_widgets()
                 self.video = Video(source='', state='stop', size_hint_y=1)
@@ -283,14 +295,10 @@ class CinemaIPTVAndroid(BoxLayout):
             self.is_fullscreen = False
 
     def on_key_down(self, window, key, scancode, codepoint, modifier):
-        if key == 32: self.toggle_play()
         return True
 
 class CinemaIPTVApp(App):
     def build(self):
-        # 🧬 GÜVENLİK ADIMI: Grafik birimi renk sıfırlaması Window ayağa kalktıktan sonra yapılıyor
-        from kivy.core.window import Window
-        Window.clearcolor = (0.07, 0.07, 0.07, 1)
         return CinemaIPTVAndroid()
 
 if __name__ == "__main__":
