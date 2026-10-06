@@ -4,9 +4,6 @@ import sys
 import re
 from datetime import datetime
 
-from kivy.config import Config
-Config.set('graphics', 'resizable', '0')
-
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -116,9 +113,7 @@ class CinemaIPTVAndroid(BoxLayout):
 
         Clock.schedule_interval(self.update_hud, 1.0)
 
-    # 🧬 ANDROID UYUMLU DOKUNMATİK PANEL GÖSTERGESİ
     def on_touch_down(self, touch):
-        # Tıklama algılandığında alt kontrol panelini gösterir
         self.hud_panel.opacity = 1.0
         Clock.unschedule(self.fade_hud)
         Clock.schedule_once(self.fade_hud, 4.0)
@@ -156,7 +151,7 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Bos Slot"]
                 
-            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0] if hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler, size_hint_y=0.15)
+            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0] if hafizadaki_listeler and "Bos Slot" not in hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler, size_hint_y=0.15)
             content.add_widget(self.file_spinner)
             
             grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.60)
@@ -199,14 +194,12 @@ class CinemaIPTVAndroid(BoxLayout):
                 pas = self.pass_input.text.strip()
                 liste_ismi = self.name_input.text.strip()
                 
-                if not srv or not usr or not pas or not liste_ismi:
-                    return
+                if not srv or not usr or not pas or not liste_ismi: return
                 liste_ismi = re.sub(r'[^\w\-_]', '', liste_ismi)
                 if not srv.startswith("http"): srv = "http://" + srv
                 if srv.endswith('/'): srv = srv[:-1]
                 
                 full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
-                
                 def on_success(req, result):
                     try:
                         safe_path = os.path.join(safe_dir, f"slot_{liste_ismi}.m3u")
