@@ -17,23 +17,32 @@ from kivy.uix.video import Video
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
-from kivy.metrics import dp 
+from kivy.metrics import dp
 
 class CinemaIPTVAndroid(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'horizontal'
-        
-        # Dinamik core yüklemesi ile açılış güvenliği
-        from iptv_core import IPTVCoreLogic
-        self.core = IPTVCoreLogic()
-        
         self.current_volume = 0.7
         self.is_fullscreen = False
         
+        # 🧬 ANDROID İZİN KONTROLÜ VE DOSYA SİSTEMİ GÜVENLİĞİ
+        from kivy.utils import platform
+        if platform == 'android':
+            from android.permissions import request_permissions, Permission
+            request_permissions([
+                Permission.INTERNET, 
+                Permission.ACCESS_NETWORK_STATE,
+                Permission.READ_MEDIA_VIDEO
+            ])
+            
+        # Dinamik core yüklemesi ile açılış kilidini kırıyoruz
+        from iptv_core import IPTVCoreLogic
+        self.core = IPTVCoreLogic()
+        
         Window.bind(on_key_down=self.on_key_down)
 
-        # SOL PANEL (Kategoriler ve Giriş)
+        # SOL PANEL (Kategoriler, Arama ve Sunucu Girişi)
         self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.30, 1), padding=dp(8), spacing=dp(8))
         self.server_btn = Button(text="🌐 Sunucu Girişi", size_hint_y=0.08, background_color=(0.17, 0.47, 0.89, 1))
         self.server_btn.bind(on_release=self.show_server_popup)
@@ -151,7 +160,7 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Bos Slot"]
                 
-            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0] if hafizadaki_listeler and "Bos Slot" not in hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler, size_hint_y=0.15)
+            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0] if hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler if hafizadaki_listeler else ["Bos Slot"], size_hint_y=0.15)
             content.add_widget(self.file_spinner)
             
             grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.60)
@@ -200,6 +209,7 @@ class CinemaIPTVAndroid(BoxLayout):
                 if srv.endswith('/'): srv = srv[:-1]
                 
                 full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
+                
                 def on_success(req, result):
                     try:
                         safe_path = os.path.join(safe_dir, f"slot_{liste_ismi}.m3u")
@@ -286,6 +296,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
