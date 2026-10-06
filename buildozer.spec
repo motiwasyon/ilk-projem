@@ -17,10 +17,10 @@ fullscreen = 1
 # Android Konfigürasyonu
 # =============================================================================
 android.accept_sdk_license = True
-android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
+android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, READ_MEDIA_VIDEO, READ_MEDIA_IMAGES
 android.api = 33
-android.minapi = 26
-android.ndk_api = 26
+android.minapi = 24
+android.ndk_api = 24
 android.build_tools_version = 33.0.2
 android.enable_androidx = True
 
