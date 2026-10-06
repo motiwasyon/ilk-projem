@@ -52,10 +52,14 @@ class CinemaIPTVAndroid(BoxLayout):
                     
                     for g_name, ch_list in self.core.channels_by_group.items():
                         for ch in ch_list:
-                            ch_name = ch.get("name", "").lower()
-                            if aranan_kelime in ch_name:
-                                btn = Button(text=f"📺 {ch.get('name', '')}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
-                                btn.bind(on_release=lambda instance, url=ch.get("url", ""), name=ch.get("name", ""): self.start_playback(url, name))
+                            # 🧬 KIVY ÖZELLİKLERİNİN ARAMA SONUÇLARINA SIZMASINI ENGELLEYEN GÜVENLİK
+                            ch_name = str(ch.get("name", "")).strip()
+                            if not ch_name or ch_name.startswith('<kivy.') or 'font_' in ch_name:
+                                continue
+                                
+                            if aranan_kelime in ch_name.lower():
+                                btn = Button(text=f"📺 {ch_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
+                                btn.bind(on_release=lambda instance, url=ch.get("url", ""), name=ch_name: self.start_playback(url, name))
                                 self.group_layout.add_widget(btn)
                     self.status_label.text = f"🔍 '{self.search_input.text}' için arama sonuçları listelendi."
             
@@ -68,7 +72,6 @@ class CinemaIPTVAndroid(BoxLayout):
             self.group_layout = GridLayout(cols=1, spacing=dp(4), size_hint_y=None)
             self.group_layout.bind(minimum_height=self.group_layout.setter('height'))
             
-            # ✅ TAM KESİN TAMİR: Kilitlenmeye sebep olan scroll_groups hatası group_layout ile değiştirildi!
             self.scroll_groups.add_widget(self.group_layout)
             
             self.left_panel.add_widget(Label(text="📁 KATEGORİLER", size_hint_y=0.04, font_size=dp(11)))
@@ -110,6 +113,7 @@ class CinemaIPTVAndroid(BoxLayout):
             self.center_panel.add_widget(self.hud_panel)
             self.add_widget(self.center_panel)
 
+            # 🛠️ GERİ GETİRİLEN ZAMANLAYICI VE HAFIZA YÜKLEME MOTORU
             Clock.schedule_interval(self.update_hud, 1.0)
             
             safe_dir = App.get_running_app().user_data_dir
@@ -152,6 +156,7 @@ class CinemaIPTVAndroid(BoxLayout):
             hafizadaki_listeler = []
             if os.path.exists(safe_dir):
                 hafizadaki_listeler = [f.replace("slot_", "").replace(".m3u", "") for f in os.listdir(safe_dir) if f.startswith("slot_") and f.endswith(".m3u")]
+            
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Kayıtlı Liste Bulunmuyor"]
                 
@@ -214,7 +219,7 @@ class CinemaIPTVAndroid(BoxLayout):
                         self.status_label.text = f"💾 Çevrimdışı Mod: {secilen} Hafızadan Yüklendi!"
                         popup.dismiss()
                         Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
-                except:
+                except Exception:
                     self.status_label.text = "❌ Hafızadan Okuma Hatası!"
 
             def do_download(inst):
@@ -250,7 +255,7 @@ class CinemaIPTVAndroid(BoxLayout):
                             Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
                         else:
                             self.status_label.text = "❌ İndirilen liste çözümlenemedi!"
-                    except:
+                    except Exception:
                         self.status_label.text = "❌ Dosya Yazma Hatası!"
 
                 def on_failure(req, result): self.status_label.text = "❌ Sunucu bağlantısı başarısız!"
@@ -282,11 +287,16 @@ class CinemaIPTVAndroid(BoxLayout):
 
             if isinstance(grouped_shows, dict):
                 for show_name, idx_data in grouped_shows.items():
-                    btn = Button(text=f"🎬 {show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
+                    # 🧬 SAĞ LİSTEYE KIVY REFERANSLARININ SIZMASINI ÖNLEYEN GÜVENLİK BARİYERİ
+                    safe_show_name = str(show_name).strip()
+                    if not safe_show_name or safe_show_name.startswith('<kivy.') or 'font_' in safe_show_name:
+                        continue
+                        
+                    btn = Button(text=f"🎬 {safe_show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
                     if isinstance(idx_data, dict):
                         first_ep_url = idx_data.get("url", "")
                         if first_ep_url:
-                            btn.bind(on_release=lambda instance, url=first_ep_url, name=show_name: self.start_playback(url, name))
+                            btn.bind(on_release=lambda instance, url=first_ep_url, name=safe_show_name: self.start_playback(url, name))
                     self.group_layout.add_widget(btn)
             self.status_label.text = f"📂 {group_name} kategorisi yüklendi."
         except Exception as e:
@@ -326,13 +336,17 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
+            # Sol paneli kaldır ve merkez paneli tam ekran yap
             self.remove_widget(self.left_panel)
             self.center_panel.size_hint = (1, 1)
             self.is_fullscreen = True
+            self.fs_btn.text = "📱 Normal Ekran"
         else:
+            # Merkez paneli eski boyutuna çek ve sol paneli EN BAŞA (index=0) ekle
             self.center_panel.size_hint = (0.70, 1)
-            self.add_widget(self.left_panel, index=1)
+            self.add_widget(self.left_panel, index=0)
             self.is_fullscreen = False
+            self.fs_btn.text = "📺 Tam Ekran"
 
     def on_key_down(self, window, key, scancode, codepoint, modifier):
         if key == 273 and self.video: 
@@ -377,11 +391,12 @@ class CinemaIPTVApp(App):
             Build = autoclass('android.os.Build$VERSION')
             if Build.SDK_INT >= 26:
                 Activity.enterPictureInPictureMode()
-        except:
+        except Exception:
             pass
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
