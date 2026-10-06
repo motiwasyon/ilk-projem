@@ -4,7 +4,7 @@ package.name = selgetv
 package.domain = org.selgeproje
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,json,m3u
-version = 1.7
+version = 1.8
 source.exclude_dirs = tests, test, bst, bin, venv, env
 
 # 🚀 GEREKSİNİMLER
