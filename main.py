@@ -4,6 +4,26 @@ import sys
 import re
 from datetime import datetime
 
+# =============================================================================
+# 🧬 SABOTAJ VE DENEY ENJEKSİYONU
+# =============================================================================
+from kivy.uix.label import Label as KivyLabel
+
+# Kivy'nin hata anında string'e çevirmeye çalıştığı tüm gizli özellikleri 
+# tamamen ezip yerine kendi abuk sabuk metnimizi basıyoruz!
+try:
+    # Label nesnesinin tüm dahili nitelik listesini bu saçma metinle değiştiriyoruz
+    KivyLabel.__attrs__ = (
+        "--- BINGO! SIZINTI BURADAN KAYNAKLANIYOR! ---",
+        "abuk_sabuk_metin_1",
+        "ZORT_DURUMU_MEYDANA_GELDI_2026",
+        "kivy_oradaki_widgeti_su_an_cozemedi_patladi",
+        "TEST_BAŞARILI_EKRAN_BİZDE"
+    )
+except Exception:
+    pass
+# =============================================================================
+
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -412,6 +432,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
