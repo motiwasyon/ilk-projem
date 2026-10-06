@@ -52,9 +52,8 @@ class CinemaIPTVAndroid(BoxLayout):
                     
                     for g_name, ch_list in self.core.channels_by_group.items():
                         for ch in ch_list:
-                            # 🧬 KIVY ÖZELLİKLERİNİN ARAMA SONUÇLARINA SIZMASINI ENGELLEYEN GÜVENLİK
                             ch_name = str(ch.get("name", "")).strip()
-                            if not ch_name or ch_name.startswith('<kivy.') or 'font_' in ch_name:
+                            if not ch_name or ch_name.startswith('<kivy.') or 'font_' in ch_name or 'halign' in ch_name:
                                 continue
                                 
                             if aranan_kelime in ch_name.lower():
@@ -113,15 +112,10 @@ class CinemaIPTVAndroid(BoxLayout):
             self.center_panel.add_widget(self.hud_panel)
             self.add_widget(self.center_panel)
 
-            # 🛠️ GERİ GETİRİLEN ZAMANLAYICI VE HAFIZA YÜKLEME MOTORU
+            # 🚀 GÜVENLİK ADIMI: Zamanlayıcı aktif fakat çökerten otomatik yükleme mekanizması kaldırıldı.
             Clock.schedule_interval(self.update_hud, 1.0)
-            
-            safe_dir = App.get_running_app().user_data_dir
-            aktif_yol = os.path.join(safe_dir, "aktif_xtream_liste.m3u")
-            if os.path.exists(aktif_yol):
-                if self.core.parse_m3u(aktif_yol):
-                    Clock.schedule_once(lambda dt: self.populate_groups(), 1.5)
-                    self.status_label.text = "💾 IPTV Listesi Hafızadan Yüklendi."
+            self.status_label.text = "📺 SelgeTV Hazır. Listeyi Yüklemek İçin Giriş Yapın."
+
         except Exception as major_error:
             self.clear_widgets()
             self.add_widget(Label(text=f"🚨 Başlatma Hatası Yakalandı:\n{str(major_error)}"))
@@ -149,7 +143,6 @@ class CinemaIPTVAndroid(BoxLayout):
             from kivy.uix.spinner import Spinner
             from kivy.app import App
             
-            # Kivy'nin hatalı Clipboard modülü yerine yerel Android panosunu çağıran güvenli fonksiyon
             def get_system_clipboard():
                 from kivy.utils import platform
                 if platform == 'android':
@@ -184,7 +177,8 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Kayıtlı Liste Bulunmuyor"]
                 
-            self.file_spinner = Spinner(text=hafizadaki_listeler[0], values=hafizadaki_listeler, size_hint_y=0.15, background_color=(0.2, 0.2, 0.2, 1))
+            # 🎯 KESİN TAMİR: Spinner metnine listenin kendisi değil, sadece ilk elemanın string hali veriliyor
+            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0]), values=hafizadaki_listeler, size_hint_y=0.15, background_color=(0.2, 0.2, 0.2, 1))
             content.add_widget(Label(text="📱 Kayıtlı Listeleriniz:", size_hint_y=0.05, font_size=dp(11)))
             content.add_widget(self.file_spinner)
             
@@ -292,7 +286,6 @@ class CinemaIPTVAndroid(BoxLayout):
         except Exception as e:
             self.status_label.text = f"❌ Panel Hatası: {str(e)[:30]}"
 
-
     def populate_groups(self):
         self.group_layout.clear_widgets()
         for g_name in sorted(self.core.channels_by_group.keys()):
@@ -314,7 +307,7 @@ class CinemaIPTVAndroid(BoxLayout):
                 for show_name, idx_data in grouped_shows.items():
                     # 🧬 SAĞ LİSTEYE KIVY REFERANSLARININ SIZMASINI ÖNLEYEN GÜVENLİK BARİYERİ
                     safe_show_name = str(show_name).strip()
-                    if not safe_show_name or safe_show_name.startswith('<kivy.') or 'font_' in safe_show_name:
+                    if not safe_show_name or safe_show_name.startswith('<kivy.') or 'font_' in safe_show_name or 'halign' in safe_show_name:
                         continue
                         
                     btn = Button(text=f"🎬 {safe_show_name}", size_hint_y=None, height=dp(40), background_color=(0.15, 0.15, 0.15, 1))
@@ -361,13 +354,11 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
-            # Sol paneli kaldır ve merkez paneli tam ekran yap
             self.remove_widget(self.left_panel)
             self.center_panel.size_hint = (1, 1)
             self.is_fullscreen = True
             self.fs_btn.text = "📱 Normal Ekran"
         else:
-            # Merkez paneli eski boyutuna çek ve sol paneli EN BAŞA (index=0) ekle
             self.center_panel.size_hint = (0.70, 1)
             self.add_widget(self.left_panel, index=0)
             self.is_fullscreen = False
