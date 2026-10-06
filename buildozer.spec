@@ -4,11 +4,11 @@ package.name = selgetv
 package.domain = org.selgeproje
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,json,m3u
-version = 1.8
+version = 3.0
 source.exclude_dirs = tests, test, bst, bin, venv, env
 
 # 🚀 GEREKSİNİMLER
-requirements = python3,kivy==2.3.0,openssl,requests,urllib3,chardet,certifi,idna
+requirements = python3,kivy==2.3.0,openssl,requests,urllib3,certifi
 
 orientation = landscape
 fullscreen = 1
@@ -34,6 +34,7 @@ android.archs = arm64-v8a
 p4a.branch = release-2024.01.21
 android.ndk = 25b
 android.allow_backup = True
+android.p4a_extra_args = --exclude-libs=libestdc++,test,unittest,tkinter,pydoc,distutils,googletest --no-deps
 
 [buildozer]
 log_level = 2
