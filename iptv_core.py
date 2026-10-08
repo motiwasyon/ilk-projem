@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 import os
 import re
@@ -10,9 +9,14 @@ class IPTVCoreLogic:
     def parse_m3u(self, file_path):
         self.channels_by_group = {}
         try:
+            # 🎯 ÇÖKMEYİ BİTİREN REFORM: Kivy'nin App importunu dosyanın en başından aldık,
+            # sadece ihtiyaç duyulduğu an (fonksiyon çalışırken) içeride çağırıyoruz.
+            # Bu sayede "Loading..." ekranı kilitlenmeden tak diye geçecektir.
             if not os.path.isabs(file_path):
                 from kivy.app import App
-                file_path = os.path.join(App.get_running_app().user_data_dir, file_path)
+                running_app = App.get_running_app()
+                if running_app:
+                    file_path = os.path.join(running_app.user_data_dir, file_path)
                 
             if not os.path.exists(file_path):
                 return False
