@@ -22,16 +22,9 @@ class CinemaIPTVAndroid(BoxLayout):
         self.orientation = 'horizontal'
         self.is_fullscreen = False
         
-        # 🧬 ANDROID TV BOX VE TABLET İÇİN KUSURSUZ İZİN SİSTEMİ
-        from kivy.utils import platform
-        if platform == 'android':
-            from android.permissions import request_permissions, Permission
-            request_permissions([
-                Permission.INTERNET, 
-                Permission.ACCESS_NETWORK_STATE,
-                Permission.ACCESS_WIFI_STATE,
-                Permission.READ_EXTERNAL_STORAGE
-            ])
+        # 🧬 AÇILIŞI HIZLANDIRAN AKILLI İZİN MOTORU:
+        # İzin isteme motorunu ana iş parçacığını yormasın diye 1 saniye gecikmeli (Clock) tetikliyoruz.
+        Clock.schedule_once(self.request_android_permissions, 1.0)
             
         from iptv_core import IPTVCoreLogic
         self.core = IPTVCoreLogic()
@@ -65,7 +58,7 @@ class CinemaIPTVAndroid(BoxLayout):
         self.status_label = Label(text="📺 SelgeTV v3.0 Premium", size_hint_y=0.20, font_size=dp(16), font_weight='bold')
         self.center_panel.add_widget(self.status_label)
 
-        # Kumanda ile yönetimi kolaylaştıran devasa rehber kutusu
+        # Devasa rehber kutusu
         self.guide_box = BoxLayout(size_hint_y=0.60, orientation='vertical', padding=dp(10))
         self.guide_label = Label(text="🍿 TELEVİZO MOTORU AKTİF\n\nSoldan bir kategori seçin ve yayına tıklayın.\nSistem otomatik olarak Just Player'ı dışarıdan\ntam ekran ve sıfır donmayla ayağa kaldıracaktır.", font_size=dp(12), halign='center')
         self.guide_box.add_widget(self.guide_label)
@@ -81,6 +74,20 @@ class CinemaIPTVAndroid(BoxLayout):
         self.center_panel.add_widget(self.hud_panel)
         
         self.add_widget(self.center_panel)
+
+    def request_android_permissions(self, dt):
+        """Açılış hızını baltalamamak için izinleri arka planda ister"""
+        try:
+            from kivy.utils import platform
+            if platform == 'android':
+                from android.permissions import request_permissions, Permission
+                request_permissions([
+                    Permission.INTERNET, 
+                    Permission.ACCESS_NETWORK_STATE,
+                    Permission.ACCESS_WIFI_STATE,
+                    Permission.READ_EXTERNAL_STORAGE
+                ])
+        except Exception: pass
 
     def filter_channels_by_search(self, instance):
         aranan_kelime = self.search_input.text.strip().lower()
@@ -215,12 +222,14 @@ class CinemaIPTVAndroid(BoxLayout):
     def start_playback(self, url, name):
         """
         🧬 TELEVİZO KALİTESİNDE JUST PLAYER KİLİTLEME MOTORU:
-        M3U8 ve TS akışlarını sarsıntısız doğrudan dış oynatıcıya fırlatır.
+        Gecikmeli yükleme (Lazy Load) yöntemi ile jnius kütüphanesini sadece 
+        bu satır tetiklendiğinde çağırarak "Loading" takılmasını tamamen yok ediyoruz.
         """
         self.status_label.text = f"🎬 Açılıyor: {name}"
         try:
             from kivy.utils import platform
             if platform == 'android':
+                # 🎯 KİLİT SATIRLAR: Java sınıflarını açılışta değil, tam şu salisede belleğe alıyoruz
                 from jnius import autoclass
                 Intent = autoclass('android.content.Intent')
                 Uri = autoclass('android.net.Uri')
@@ -229,16 +238,12 @@ class CinemaIPTVAndroid(BoxLayout):
                 video_uri = Uri.parse(url)
                 intent = Intent(Intent.ACTION_VIEW)
                 
-                # Canlı akış hatasını çözen hiyerarşik mime-type belirleme
                 if ".m3u8" in url.lower():
                     intent.setDataAndType(video_uri, "application/x-mpegURL")
                 else:
                     intent.setDataAndType(video_uri, "video/mp4")
                 
-                # Just Player'ın Android üzerindeki resmi paket ismi sabitlemesi
                 intent.setPackage("com.brouken.player")
-                
-                # Kumanda çakışmalarını sıfırlayan bağımsız activity bayrakları
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 
                 currentActivity.startActivity(intent)
@@ -264,6 +269,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+
 
 
 
