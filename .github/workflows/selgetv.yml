@@ -43,10 +43,12 @@ jobs:
         echo "source.include_exts = py,png,jpg,kv,atlas,json,m3u" >> buildozer.spec
         echo "version = 3.0" >> buildozer.spec
         echo "orientation = landscape" >> buildozer.spec
-        # 🎯 ÇÖKMEYİ BİTİREN GÜVENLİ REQUIREMENTS: ffpyplayer kütüphanesini çıkarıp Just Player'ı dışarıdan besliyoruz
-        echo "requirements = python3,kivy==2.3.0,requests,urllib3,certifi,idna" >> buildozer.spec
+        
+        # 🎯 "LOADING" ÇÖKMESİNİ BİTİREN KRİTİK GEREKSİNİMLER (GÜNCEL)
+        # Android ve pyjnius kütüphanelerini listeye zorla ekleyerek Kivy'nin açılış motorunu kurtarıyoruz.
+        echo "requirements = python3,kivy==2.3.0,android,pyjnius,requests,urllib3,certifi,idna" >> buildozer.spec
+        
         echo "android.add_compile_options = sourceCompatibility = JavaVersion.VERSION_1_8, targetCompatibility = JavaVersion.VERSION_1_8" >> buildozer.spec
-        # 🌐 HTTP SUNUCULARI AÇAN HAYATİ KALKAN
         echo "android.manifest.application_arguments = android:usesCleartextTraffic=\"true\"" >> buildozer.spec 
         echo "fullscreen = 1" >> buildozer.spec
         echo "android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, READ_EXTERNAL_STORAGE" >> buildozer.spec
