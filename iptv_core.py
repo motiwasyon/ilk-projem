@@ -9,9 +9,7 @@ class IPTVCoreLogic:
     def parse_m3u(self, file_path):
         self.channels_by_group = {}
         try:
-            # 🎯 ÇÖKMEYİ BİTİREN REFORM: Kivy'nin App importunu dosyanın en başından aldık,
-            # sadece ihtiyaç duyulduğu an (fonksiyon çalışırken) içeride çağırıyoruz.
-            # Bu sayede "Loading..." ekranı kilitlenmeden tak diye geçecektir.
+            # 🎯 Kivy App nesnesini hafıza kilitlenmesi yaratmasın diye sadece fonksiyon içinde çağırıyoruz
             if not os.path.isabs(file_path):
                 from kivy.app import App
                 running_app = App.get_running_app()
@@ -27,6 +25,7 @@ class IPTVCoreLogic:
                     line = line.strip()
                     if line.startswith("#EXTINF"):
                         g_match = re.search(r'group-title="([^"]+)"', line)
+                        # 📝 TÜRKÇE HARF ARINDIRMA: "Diğer" yerine evrensel "Diger" formatına çektik
                         group = g_match.group(1).strip() if g_match else "Diger"
                         idx = line.rfind(',')
                         name = line[idx+1:].strip() if idx != -1 else "Kanal"
@@ -76,5 +75,6 @@ class IPTVCoreLogic:
             return shows
         except Exception:
             return {}
+
 
 
