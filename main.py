@@ -22,23 +22,22 @@ class CinemaIPTVAndroid(BoxLayout):
         self.orientation = 'horizontal'
         self.is_fullscreen = False
         
-        # 🧬 AÇILIŞI HIZLANDIRAN AKILLI İZİN MOTORU:
-        # İzin isteme motorunu ana iş parçacığını yormasın diye 1 saniye gecikmeli (Clock) tetikliyoruz.
+        # Acilis hızını baltalamamak icin izinleri arka planda gecikmeli ister
         Clock.schedule_once(self.request_android_permissions, 1.0)
             
         from iptv_core import IPTVCoreLogic
         self.core = IPTVCoreLogic()
 
-        # SOL PANEL (Kategoriler ve Sunucu Girişi)
+        # SOL PANEL (Kategoriler ve Sunucu Girisi)
         self.left_panel = BoxLayout(orientation='vertical', size_hint=(0.35, 1), padding=dp(8), spacing=dp(8))
-        self.server_btn = Button(text="🌐 Sunucu Girişi / Düzenle", size_hint_y=0.10, background_color=(0.17, 0.47, 0.89, 1))
+        self.server_btn = Button(text="Server Girisi / Duzenle", size_hint_y=0.10, background_color=(0.17, 0.47, 0.89, 1))
         self.server_btn.bind(on_release=self.show_server_popup)
         self.left_panel.add_widget(self.server_btn)
 
-        # 🔍 AKILLI TV BOX ARAMA SATIRI
+        # AKILLI TV BOX ARAMA SATIRI
         search_row = BoxLayout(orientation='horizontal', size_hint_y=0.10, spacing=dp(4))
         self.search_input = TextInput(hint_text="Kanal/Film Ara...", multiline=False, size_hint_x=0.70, background_color=(0.12, 0.12, 0.12, 1), foreground_color=(1,1,1,1))
-        search_btn = Button(text="🔍 ARA", size_hint_x=0.30, background_color=(0.17, 0.47, 0.89, 1), font_size=dp(11), font_weight='bold')
+        search_btn = Button(text="ARA", size_hint_x=0.30, background_color=(0.17, 0.47, 0.89, 1), font_size=dp(11), font_weight='bold')
         
         search_btn.bind(on_release=self.filter_channels_by_search)
         search_row.add_widget(self.search_input)
@@ -55,19 +54,19 @@ class CinemaIPTVAndroid(BoxLayout):
 
         # MERKEZ PANEL (TV Box Kumanda ve Rehber Paneli)
         self.center_panel = BoxLayout(orientation='vertical', size_hint=(0.65, 1), padding=dp(12), spacing=dp(8))
-        self.status_label = Label(text="📺 SelgeTV v3.0 Premium", size_hint_y=0.20, font_size=dp(16), font_weight='bold')
+        self.status_label = Label(text="SelgeTV v3.0 Premium", size_hint_y=0.20, font_size=dp(16), font_weight='bold')
         self.center_panel.add_widget(self.status_label)
 
         # Devasa rehber kutusu
         self.guide_box = BoxLayout(size_hint_y=0.60, orientation='vertical', padding=dp(10))
-        self.guide_label = Label(text="🍿 TELEVİZO MOTORU AKTİF\n\nSoldan bir kategori seçin ve yayına tıklayın.\nSistem otomatik olarak Just Player'ı dışarıdan\ntam ekran ve sıfır donmayla ayağa kaldıracaktır.", font_size=dp(12), halign='center')
+        self.guide_label = Label(text="TELEVIZO MOTORU AKTIF\n\nSoldan bir kategori secin ve yayina tiklayin.\nSistem otomatik olarak Just Playeri disaridan\ntam ekran ve sifir donmayla ayaga kaldiracaktir.", font_size=dp(12), halign='center')
         self.guide_box.add_widget(self.guide_label)
         self.center_panel.add_widget(self.guide_box)
 
         # Alt Bilgi Barı
         self.hud_panel = BoxLayout(orientation='horizontal', size_hint_y=0.20, padding=dp(6), spacing=dp(8))
-        self.info_label = Label(text="Durum: Liste Hazır", size_hint_x=0.60, font_size=dp(11))
-        self.fs_btn = Button(text="📺 Sol Paneli Gizle", size_hint_x=0.40, background_color=(0.2, 0.2, 0.2, 1))
+        self.info_label = Label(text="Durum: Liste Hazir", size_hint_x=0.60, font_size=dp(11))
+        self.fs_btn = Button(text="Sol Paneli Gizle", size_hint_x=0.40, background_color=(0.2, 0.2, 0.2, 1))
         self.fs_btn.bind(on_release=self.toggle_fullscreen_mode)
         self.hud_panel.add_widget(self.info_label)
         self.hud_panel.add_widget(self.fs_btn)
@@ -76,7 +75,6 @@ class CinemaIPTVAndroid(BoxLayout):
         self.add_widget(self.center_panel)
 
     def request_android_permissions(self, dt):
-        """Açılış hızını baltalamamak için izinleri arka planda ister"""
         try:
             from kivy.utils import platform
             if platform == 'android':
@@ -93,7 +91,7 @@ class CinemaIPTVAndroid(BoxLayout):
         aranan_kelime = self.search_input.text.strip().lower()
         if aranan_kelime:
             self.group_layout.clear_widgets()
-            back_btn = Button(text="⬅ KATEGORİLERE DÖN", size_hint_y=None, height=dp(42), background_color=(0.8, 0.2, 0.2, 1))
+            back_btn = Button(text="KATEGORILERE DON", size_hint_y=None, height=dp(42), background_color=(0.8, 0.2, 0.2, 1))
             back_btn.bind(on_release=lambda x: self.populate_groups())
             self.group_layout.add_widget(back_btn)
             
@@ -101,7 +99,7 @@ class CinemaIPTVAndroid(BoxLayout):
                 for ch in ch_list:
                     ch_name = str(ch.get("name", "")).strip()
                     if aranan_kelime in ch_name.lower():
-                        btn = Button(text=f"📺 {ch_name}", size_hint_y=None, height=dp(40))
+                        btn = Button(text=f"TV {ch_name}", size_hint_y=None, height=dp(40))
                         btn.bind(on_release=lambda inst, url=ch.get("url", ""), name=ch_name: self.start_playback(url, name))
                         self.group_layout.add_widget(btn)
 
@@ -118,7 +116,7 @@ class CinemaIPTVAndroid(BoxLayout):
             if not hafizadaki_listeler:
                 hafizadaki_listeler = ["Bos Slot"]
                 
-            self.file_spinner = Spinner(text=str(hafizadaki_listeler[0] if hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler, size_hint_y=0.15)
+            self.file_spinner = Spinner(text=str(hafizadaki_listeler if hafizadaki_listeler else "Bos Slot"), values=hafizadaki_listeler, size_hint_y=0.15)
             content.add_widget(self.file_spinner)
             
             grid = GridLayout(cols=2, spacing=dp(6), size_hint_y=0.60)
@@ -167,7 +165,7 @@ class CinemaIPTVAndroid(BoxLayout):
                 if srv.endswith('/'): srv = srv[:-1]
                 
                 full_url = f"{srv}/get.php?username={usr}&password={pas}&output=ts&type=m3u_plus"
-                self.info_label.text = "⏳ Sunucuya bağlanılıyor..."
+                self.info_label.text = "Sunucuya baglaniliyor..."
                 
                 def on_success(req, result):
                     try:
@@ -182,13 +180,13 @@ class CinemaIPTVAndroid(BoxLayout):
                             
                         if self.core.parse_m3u(aktif_yol):
                             popup.dismiss()
-                            self.info_label.text = "✅ Liste Yüklendi!"
+                            self.info_label.text = "Liste Yuklendi!"
                             Clock.schedule_once(lambda dt: self.populate_groups(), 0.5)
                     except Exception as e:
-                        self.info_label.text = f"❌ Kayıt Hatası: {str(e)}"
+                        self.info_label.text = f"Kayit Hatasi: {str(e)}"
 
-                def on_failure(req, result): self.info_label.text = "❌ Sunucu yanıt vermedi!"
-                def on_error(req, result): self.info_label.text = "❌ Bağlantı hatası oluştu!"
+                def on_failure(req, result): self.info_label.text = "Sunucu yanit vermedi!"
+                def on_error(req, result): self.info_label.text = "Baglanti hatasi olustu!"
 
                 UrlRequest(full_url, on_success=on_success, on_failure=on_failure, on_error=on_error, timeout=30)
 
@@ -207,29 +205,27 @@ class CinemaIPTVAndroid(BoxLayout):
     def load_channels(self, group_name):
         try:
             self.group_layout.clear_widgets()
-            back_btn = Button(text="⬅ KATEGORİLER", size_hint_y=None, height=dp(44), background_color=(0.8, 0.2, 0.2, 1))
+            back_btn = Button(text="KATEGORILER", size_hint_y=None, height=dp(44), background_color=(0.8, 0.2, 0.2, 1))
             back_btn.bind(on_release=lambda inst: self.populate_groups())
             self.group_layout.add_widget(back_btn)
 
             ch_list = self.core.channels_by_group.get(group_name, [])
             for ch in ch_list:
                 ch_name = str(ch.get("name", "")).strip()
-                btn = Button(text=f"📺 {ch_name}", size_hint_y=None, height=dp(40))
+                btn = Button(text=f"TV {ch_name}", size_hint_y=None, height=dp(40))
                 btn.bind(on_release=lambda instance, url=ch.get("url", ""), name=ch_name: self.start_playback(url, name))
                 self.group_layout.add_widget(btn)
         except Exception: pass
 
     def start_playback(self, url, name):
         """
-        🧬 TELEVİZO KALİTESİNDE JUST PLAYER KİLİTLEME MOTORU:
-        Gecikmeli yükleme (Lazy Load) yöntemi ile jnius kütüphanesini sadece 
-        bu satır tetiklendiğinde çağırarak "Loading" takılmasını tamamen yok ediyoruz.
+        🧬 TELEVIZO KALITESINDE JUST PLAYER KILITLEME MOTORU:
+        M3U8 ve TS akislarini sarsintisiz dogrudan dis oynaticiya firlatir.
         """
-        self.status_label.text = f"🎬 Açılıyor: {name}"
+        self.status_label.text = f"Aciliyor: {name}"
         try:
             from kivy.utils import platform
             if platform == 'android':
-                # 🎯 KİLİT SATIRLAR: Java sınıflarını açılışta değil, tam şu salisede belleğe alıyoruz
                 from jnius import autoclass
                 Intent = autoclass('android.content.Intent')
                 Uri = autoclass('android.net.Uri')
@@ -238,29 +234,33 @@ class CinemaIPTVAndroid(BoxLayout):
                 video_uri = Uri.parse(url)
                 intent = Intent(Intent.ACTION_VIEW)
                 
+                # Canli akis hatasini cozen hiyerarşik mime-type belirleme
                 if ".m3u8" in url.lower():
                     intent.setDataAndType(video_uri, "application/x-mpegURL")
                 else:
                     intent.setDataAndType(video_uri, "video/mp4")
                 
+                # Just Player'in Android uzerindeki resmi paket ismi sabitlemesi
                 intent.setPackage("com.brouken.player")
+                
+                # Kumanda cakismalarini sifirlayan bagimsiz activity bayraklari
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 
                 currentActivity.startActivity(intent)
                 return
         except Exception as e:
-            self.status_label.text = f"❌ Just Player Hatası: {str(e)}"
+            self.status_label.text = f"Just Player Hatasi: {str(e)}"
 
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
             self.remove_widget(self.left_panel)
             self.center_panel.size_hint = (1, 1)
-            self.fs_btn.text = "📺 Sol Paneli Göster"
+            self.fs_btn.text = "Sol Paneli Goster"
             self.is_fullscreen = True
         else:
             self.center_panel.size_hint = (0.65, 1)
             self.add_widget(self.left_panel, index=0)
-            self.fs_btn.text = "📺 Sol Paneli Gizle"
+            self.fs_btn.text = "Sol Paneli Gizle"
             self.is_fullscreen = False
 
 class CinemaIPTVApp(App):
@@ -269,6 +269,8 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
+)
+
 
 
 
