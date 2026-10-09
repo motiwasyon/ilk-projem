@@ -22,7 +22,7 @@ class CinemaIPTVAndroid(BoxLayout):
         self.orientation = 'horizontal'
         self.is_fullscreen = False
         
-        # Acilis hızını baltalamamak icin izinleri arka planda gecikmeli ister
+        # Acilis hizini baltalamamak icin izinleri arka planda gecikmeli ister
         Clock.schedule_once(self.request_android_permissions, 1.0)
             
         from iptv_core import IPTVCoreLogic
@@ -40,7 +40,7 @@ class CinemaIPTVAndroid(BoxLayout):
         search_btn = Button(text="ARA", size_hint_x=0.30, background_color=(0.17, 0.47, 0.89, 1), font_size=dp(11), font_weight='bold')
         
         search_btn.bind(on_release=self.filter_channels_by_search)
-        search_row.add_widget(self.search_input)
+        search_row.add_widget(search_input)
         search_row.add_widget(search_btn)
         self.left_panel.add_widget(search_row)
 
@@ -59,7 +59,7 @@ class CinemaIPTVAndroid(BoxLayout):
 
         # Devasa rehber kutusu
         self.guide_box = BoxLayout(size_hint_y=0.60, orientation='vertical', padding=dp(10))
-        self.guide_label = Label(text="TELEVIZO MOTORU AKTIF\n\nSoldan bir kategori secin ve yayina tiklayin.\nSistem otomatik olarak Just Playeri disaridan\ntam ekran ve sifir donmayla ayaga kaldiracaktir.", font_size=dp(12), halign='center')
+        self.guide_label = Label(text="EVRENSEL MOBIL MOTOR AKTIF\n\nSoldan bir kategori secin ve yayina tiklayin.\nSistem tabletinizde yuklu olan video oynaticilari\n(Televizo, VLC, MX Player veya Just Player)\notomatik olarak cagiracaktir.", font_size=dp(12), halign='center')
         self.guide_box.add_widget(self.guide_label)
         self.center_panel.add_widget(self.guide_box)
 
@@ -219,8 +219,9 @@ class CinemaIPTVAndroid(BoxLayout):
 
     def start_playback(self, url, name):
         """
-        🧬 TELEVIZO KALITESINDE JUST PLAYER KILITLEME MOTORU:
-        M3U8 ve TS akislarini sarsintisiz dogrudan dis oynaticiya firlatir.
+        🧬 TELEVIZO KALITESINDE EVRENSEL MOTOR:
+        Paket adini (com.brouken.player) tamamen kaldirarak Android sistemini rahatlatiyoruz.
+        Yayin tiklandiginda tablette yuklu olan tum uyumlu playerlari (VLC, MX Player vb.) listeler.
         """
         self.status_label.text = f"Aciliyor: {name}"
         try:
@@ -234,22 +235,16 @@ class CinemaIPTVAndroid(BoxLayout):
                 video_uri = Uri.parse(url)
                 intent = Intent(Intent.ACTION_VIEW)
                 
-                # Canli akis hatasini cozen hiyerarşik mime-type belirleme
                 if ".m3u8" in url.lower():
                     intent.setDataAndType(video_uri, "application/x-mpegURL")
                 else:
-                    intent.setDataAndType(video_uri, "video/mp4")
+                    intent.setDataAndType(video_uri, "video/*")
                 
-                # Just Player'in Android uzerindeki resmi paket ismi sabitlemesi
-                intent.setPackage("com.brouken.player")
-                
-                # Kumanda cakismalarini sifirlayan bagimsiz activity bayraklari
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                
                 currentActivity.startActivity(intent)
                 return
         except Exception as e:
-            self.status_label.text = f"Just Player Hatasi: {str(e)}"
+            self.status_label.text = f"Oynatici Hatasi: {str(e)}"
 
     def toggle_fullscreen_mode(self, instance=None):
         if not self.is_fullscreen:
@@ -269,8 +264,6 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
-
-
 
 
 
