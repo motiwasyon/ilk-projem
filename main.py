@@ -269,7 +269,7 @@ class CinemaIPTVApp(App):
 
 if __name__ == "__main__":
     CinemaIPTVApp().run()
-)
+
 
 
 
